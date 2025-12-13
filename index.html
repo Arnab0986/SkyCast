@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SkyCast – Weather Intelligence</title>
+<meta name="description" content="SkyCast – AI-powered real-time weather, radar & alerts">
+
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+
+<!-- Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Google AdSense -->
+<script async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXX"
+  crossorigin="anonymous"></script>
+
+<style>
+body {
+  font-family: Inter, system-ui;
+  background: linear-gradient(135deg,#0f172a,#1e293b);
+  color: white;
+}
+.glass {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+#map { height: 320px; border-radius: 1rem; }
+</style>
+</head>
+
+<body class="p-4 md:p-8">
+
+<div class="max-w-7xl mx-auto space-y-6">
+
+<!-- HEADER -->
+<header class="flex justify-between items-center">
+  <h1 class="text-2xl font-bold flex items-center gap-2">
+    <i data-lucide="cloud-sun"></i> SkyCast
+  </h1>
+
+  <div class="flex gap-2">
+    <input id="cityInput" placeholder="Add city" class="glass px-3 py-2">
+    <button onclick="addCity()" class="glass px-3 py-2">+</button>
+  </div>
+</header>
+
+<!-- WEBSITE HEADER AD -->
+<div id="webHeaderAd" class="glass p-3 text-center hidden">
+  <ins class="adsbygoogle"
+    style="display:block"
+    data-ad-client="ca-pub-XXXXXXXXXXXX"
+    data-ad-slot="1111111111"
+    data-ad-format="auto"
+    data-full-width-responsive="true"></ins>
+</div>
+
+<!-- CITY TABS -->
+<div id="cityTabs" class="flex gap-2 overflow-x-auto"></div>
+
+<!-- MAIN GRID -->
+<div class="grid lg:grid-cols-3 gap-6">
+
+<!-- CURRENT -->
+<div class="glass p-6 text-center">
+  <h2 id="cityName" class="text-xl font-semibold">—</h2>
+  <p id="temp" class="text-6xl font-bold">--°</p>
+  <p id="desc" class="text-blue-300"></p>
+</div>
+
+<!-- AI -->
+<div class="glass p-6">
+  <h3 class="font-semibold mb-2">AI Forecast</h3>
+  <p id="aiText" class="text-sm text-gray-300">Loading…</p>
+</div>
+
+<!-- GOV ALERT -->
+<div id="alertBox" class="glass p-6 hidden">
+  <p class="text-red-400 font-bold">⚠ Government Alert</p>
+  <p id="alertText"></p>
+  <p class="text-xs mt-2 text-gray-400">Sponsored by National Disaster Authority</p>
+</div>
+
+</div>
+
+<!-- INLINE WEBSITE AD -->
+<div id="webInlineAd" class="glass p-4 text-center hidden">
+  <p class="text-xs text-gray-400 mb-1">Advertisement</p>
+  <ins class="adsbygoogle"
+    style="display:block"
+    data-ad-client="ca-pub-XXXXXXXXXXXX"
+    data-ad-slot="2222222222"
+    data-ad-format="rectangle"></ins>
+</div>
+
+<!-- MAP -->
+<div class="glass p-4">
+  <h3 class="font-semibold mb-2">Live Weather Radar</h3>
+  <div id="map"></div>
+</div>
+
+<!-- APP ONLY AD -->
+<div id="appAd" class="glass p-4 text-center hidden">
+  <p class="text-xs text-gray-400 mb-1">Sponsored</p>
+  <ins class="adsbygoogle"
+    style="display:block"
+    data-ad-client="ca-pub-XXXXXXXXXXXX"
+    data-ad-slot="3333333333"
+    data-ad-format="auto"></ins>
+</div>
+
+<footer class="text-center text-xs text-gray-500 pt-8">
+  © 2025 SkyCast Weather Intelligence
+</footer>
+
+</div>
+
+<script>
+lucide.createIcons();
+
+/* ---------------- DETECT MODE ---------------- */
+const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+
+/* ---------------- ADS ---------------- */
+if (!isPWA) {
+  webHeaderAd.classList.remove('hidden');
+  webInlineAd.classList.remove('hidden');
+  (adsbygoogle = window.adsbygoogle || []).push({});
+}
+if (isPWA) {
+  appAd.classList.remove('hidden');
+  (adsbygoogle = window.adsbygoogle || []).push({});
+}
+
+/* ---------------- STATE ---------------- */
+let cities = JSON.parse(localStorage.getItem('cities')) || [];
+let activeCity = cities[0] || null;
+let map, marker;
+
+/* ---------------- MULTI CITY ---------------- */
+function addCity() {
+  const v = cityInput.value.trim();
+  if (!v) return;
+  cities.push(v);
+  localStorage.setItem('cities', JSON.stringify(cities));
+  cityInput.value='';
+  renderTabs();
+}
+
+function renderTabs() {
+  cityTabs.innerHTML='';
+  cities.forEach(c=>{
+    const b=document.createElement('button');
+    b.textContent=c;
+    b.className='glass px-3 py-1';
+    b.onclick=()=>loadCity(c);
+    cityTabs.appendChild(b);
+  });
+}
+
+/* ---------------- WEATHER ---------------- */
+async function loadCity(city) {
+  cityName.textContent = city;
+
+  const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`).then(r=>r.json());
+  const { latitude, longitude } = geo.results[0];
+
+  const w = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&daily=uv_index_max&timezone=auto`).then(r=>r.json());
+
+  temp.textContent = Math.round(w.current.temperature_2m)+'°';
+  desc.textContent = codeDesc(w.current.weather_code);
+
+  aiText.textContent =
+    `In ${city}, weather is ${codeDesc(w.current.weather_code).toLowerCase()} with temperature ${Math.round(w.current.temperature_2m)}°. UV index reaches ${w.daily.uv_index_max[0]}.`;
+
+  severeAlert(w);
+  updateMap(latitude,longitude);
+}
+
+/* ---------------- ALERT ---------------- */
+function severeAlert(w){
+  if(w.current.weather_code>=95){
+    alertBox.classList.remove('hidden');
+    alertText.textContent="Severe thunderstorm expected. Stay indoors.";
+    navigator.serviceWorker.ready.then(r=>{
+      r.showNotification("⚠ Severe Weather Alert",{ body:"Thunderstorm expected." });
+    });
+  } else alertBox.classList.add('hidden');
+}
+
+/* ---------------- MAP + RADAR ---------------- */
+function initMap(){
+  map=L.map('map').setView([20,77],5);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+}
+
+function updateMap(lat,lon){
+  map.setView([lat,lon],8);
+  if(!marker) marker=L.marker([lat,lon]).addTo(map);
+  else marker.setLatLng([lat,lon]);
+
+  fetch('https://api.rainviewer.com/public/weather-maps.json')
+  .then(r=>r.json())
+  .then(d=>{
+    const t=d.radar.nowcast.at(-1).time;
+    L.tileLayer(`https://tilecache.rainviewer.com/v2/radar/${t}/{z}/{x}/{y}/256/1_1.png`,
+      {opacity:.6}).addTo(map);
+  });
+}
+
+function codeDesc(c){
+  return {0:'Clear',1:'Partly Cloudy',2:'Cloudy',61:'Rain',71:'Snow',95:'Thunderstorm'}[c]||'Weather';
+}
+
+/* ---------------- INIT ---------------- */
+initMap();
+renderTabs();
+if(activeCity) loadCity(activeCity);
+
+/* ---------------- PWA ---------------- */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js');
+}
+</script>
+</body>
+</html>
