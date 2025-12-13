@@ -11,11 +11,9 @@
 <link rel="icon" href="/icons/favicon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 
-<!-- UI -->
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 
-<!-- Maps -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -29,7 +27,6 @@ body {
   font-family: Inter, system-ui;
   background: linear-gradient(135deg,#0f172a,#1e293b);
   color: white;
-  overflow-x: hidden;
 }
 .glass {
   background: rgba(255,255,255,0.08);
@@ -38,8 +35,6 @@ body {
   border: 1px solid rgba(255,255,255,0.15);
 }
 #map { height: 320px; border-radius: 1rem; }
-
-/* Canvas */
 #weatherCanvas {
   position: fixed;
   inset: 0;
@@ -50,103 +45,73 @@ body {
 </head>
 
 <body class="p-4 md:p-8">
-
 <canvas id="weatherCanvas"></canvas>
 
 <div class="max-w-7xl mx-auto space-y-6">
 
 <header class="flex justify-between items-center">
-  <h1 class="text-2xl font-bold flex items-center gap-2">
-    <i data-lucide="cloud-sun"></i> SkyCast
-  </h1>
-  <div class="flex gap-2">
-    <input id="cityInput" placeholder="Add city" class="glass px-3 py-2">
-    <button id="addBtn" class="glass px-3 py-2">+</button>
-  </div>
+<h1 class="text-2xl font-bold flex items-center gap-2">
+<i data-lucide="cloud-sun"></i> SkyCast
+</h1>
+<div class="flex gap-2">
+<input id="cityInput" placeholder="Add city" class="glass px-3 py-2">
+<button id="addBtn" class="glass px-3 py-2">+</button>
+</div>
 </header>
 
-<!-- WEBSITE HEADER AD -->
+<!-- ADS -->
 <div id="webHeaderAd" class="glass p-3 text-center hidden">
-  <ins class="adsbygoogle"
-    style="display:block"
-    data-ad-client="ca-pub-XXXXXXXXXXXX"
-    data-ad-slot="1111111111"
-    data-ad-format="auto"
-    data-full-width-responsive="true"></ins>
+<ins class="adsbygoogle" style="display:block"
+data-ad-client="ca-pub-XXXXXXXXXXXX"
+data-ad-slot="1111111111" data-ad-format="auto"></ins>
 </div>
 
 <div id="cityTabs" class="flex gap-2 overflow-x-auto"></div>
 
 <!-- HERO -->
 <div class="glass p-8 grid md:grid-cols-2 gap-6">
-  <div>
-    <h2 id="cityName" class="text-xl opacity-80">Detecting location…</h2>
-    <div class="flex items-center gap-4 mt-2">
-      <img id="weatherIcon" class="w-20 h-20">
-      <div>
-        <p id="temp" class="text-6xl font-bold">--°</p>
-        <p id="desc" class="text-blue-300"></p>
-      </div>
-    </div>
-    <p id="localTime" class="text-sm text-gray-400 mt-2"></p>
-  </div>
+<div>
+<h2 id="cityName">Detecting location…</h2>
+<p id="temp" class="text-6xl font-bold">--°</p>
+<p id="desc" class="text-blue-300"></p>
+<p id="localTime" class="text-sm text-gray-400"></p>
+</div>
 
-  <div class="grid grid-cols-2 gap-4 text-sm">
-    <div class="glass p-3">💧 Humidity <p id="humidity" class="font-bold text-lg">--%</p></div>
-    <div class="glass p-3">🌬 Wind <p id="wind" class="font-bold text-lg">-- km/h</p><p id="windDir" class="text-xs"></p></div>
-    <div class="glass p-3">☀ UV <p id="uv" class="font-bold text-lg">--</p></div>
-    <div class="glass p-3">🫁 PM2.5 <p id="aqi" class="font-bold text-lg">--</p></div>
-  </div>
+<div class="grid grid-cols-2 gap-4">
+<div class="glass p-3">💧 Humidity <p id="humidity">--%</p></div>
+<div class="glass p-3">🌬 Wind <p id="wind">-- km/h</p><p id="windDir"></p></div>
+<div class="glass p-3">☀ UV <p id="uv">--</p></div>
+<div class="glass p-3">🫁 PM2.5 <p id="aqi">--</p></div>
+</div>
 </div>
 
 <div class="grid lg:grid-cols-2 gap-6">
-  <div class="glass p-6">
-    <h3 class="font-semibold mb-2">AI Forecast</h3>
-    <p id="aiText" class="text-sm text-gray-300">Generating…</p>
-  </div>
-
-  <div class="glass p-6">
-    <h3 class="font-semibold mb-2">Health Advisory</h3>
-    <p id="healthAdvice" class="text-sm text-gray-300">Analyzing…</p>
-    <button id="voiceBtn" class="glass px-3 py-1 text-xs mt-3">🔊 Read</button>
-  </div>
+<div class="glass p-6">
+<h3>AI Forecast</h3>
+<p id="aiText">Generating…</p>
+</div>
+<div class="glass p-6">
+<h3>Health Advisory</h3>
+<p id="healthAdvice">Analyzing…</p>
+<button id="voiceBtn">🔊 Read</button>
+</div>
 </div>
 
 <!-- HOURLY -->
 <div class="glass p-4">
-  <h3 class="font-semibold mb-2">Hourly Forecast</h3>
-  <div id="hourlyStrip" class="flex gap-4 overflow-x-auto"></div>
-</div>
-
-<!-- INLINE WEBSITE AD -->
-<div id="webInlineAd" class="glass p-4 text-center hidden">
-  <p class="text-xs text-gray-400 mb-1">Advertisement</p>
-  <ins class="adsbygoogle"
-    style="display:block"
-    data-ad-client="ca-pub-XXXXXXXXXXXX"
-    data-ad-slot="2222222222"
-    data-ad-format="rectangle"></ins>
+<h3>Hourly Forecast</h3>
+<div id="hourlyStrip" class="flex gap-4 overflow-x-auto"></div>
 </div>
 
 <!-- DAILY -->
 <div class="glass p-4">
-  <h3 class="font-semibold mb-2">7-Day Forecast</h3>
-  <div id="daily" class="space-y-2"></div>
+<h3>7-Day Forecast</h3>
+<div id="daily"></div>
 </div>
 
 <div class="glass p-4">
-  <h3 class="font-semibold mb-2">Live Radar</h3>
-  <div id="map"></div>
-</div>
-
-<!-- APP ONLY AD -->
-<div id="appAd" class="glass p-4 text-center hidden">
-  <p class="text-xs text-gray-400 mb-1">Sponsored</p>
-  <ins class="adsbygoogle"
-    style="display:block"
-    data-ad-client="ca-pub-XXXXXXXXXXXX"
-    data-ad-slot="3333333333"
-    data-ad-format="auto"></ins>
+<h3>Live Radar</h3>
+<div id="map"></div>
 </div>
 
 <footer class="text-center text-xs text-gray-500 pt-8">
@@ -156,160 +121,133 @@ body {
 </div>
 
 <script>
-/* ===== CORE ===== */
 lucide.createIcons();
 const $=id=>document.getElementById(id);
-let cities=JSON.parse(localStorage.getItem("cities"))||[];
 let map,marker;
 
-/* ===== ADS LOGIC ===== */
-const isPWA =
-  window.matchMedia('(display-mode: standalone)').matches ||
-  window.navigator.standalone === true;
-
-function loadAds(){
-  try{
-    if(!window.adsbygoogle)return;
-    if(!isPWA){
-      webHeaderAd.classList.remove("hidden");
-      webInlineAd.classList.remove("hidden");
-      (adsbygoogle=window.adsbygoogle||[]).push({});
-      (adsbygoogle=window.adsbygoogle||[]).push({});
-    }else{
-      appAd.classList.remove("hidden");
-      (adsbygoogle=window.adsbygoogle||[]).push({});
-    }
-  }catch{}
-}
-
-/* ===== MAP ===== */
+/* MAP */
 function initMap(){
-  map=L.map("map").setView([20,77],5);
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png").addTo(map);
+map=L.map("map").setView([20,77],5);
+L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png").addTo(map);
 }
 
-/* ===== LOCATION ===== */
-async function detectLocation(){
-  return new Promise(res=>{
-    navigator.geolocation?.getCurrentPosition(
-      p=>res({city:"Your Location",lat:p.coords.latitude,lon:p.coords.longitude}),
-      ()=>res({city:"New Delhi",lat:28.61,lon:77.2})
-    );
-  });
+/* LOCATION */
+function detectLocation(){
+return new Promise(r=>{
+navigator.geolocation.getCurrentPosition(
+p=>r({city:"Your Location",lat:p.coords.latitude,lon:p.coords.longitude}),
+()=>r({city:"New Delhi",lat:28.61,lon:77.2})
+);
+});
 }
 
-/* ===== WEATHER ===== */
-async function loadWeather(lat,lon,label){
-  cityName.textContent=label;
-
-  const w=await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}
-    &current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m
-    &hourly=temperature_2m,weather_code
-    &daily=temperature_2m_max,temperature_2m_min,uv_index_max
-    &air_quality=pm2_5
-    &timezone=auto`
-  ).then(r=>r.json());
-
-  temp.textContent=Math.round(w.current.temperature_2m)+"°";
-  desc.textContent=descText(w.current.weather_code);
-  humidity.textContent=w.current.relative_humidity_2m+"%";
-  wind.textContent=w.current.wind_speed_10m+" km/h";
-  windDir.textContent=windDirection(w.current.wind_direction_10m);
-  uv.textContent=w.daily.uv_index_max[0];
-  aqi.textContent=w.air_quality?.pm2_5?.[0]||0;
-
-  renderHourly(w);
-  renderDaily(w);
-  updateMap(lat,lon);
-  generateAI(w,label);
-  generateHealth(w);
-  applyCanvasWeather(w.current.weather_code);
-
-  localTime.textContent="Local time: "+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+/* AIR QUALITY (FIXED) */
+async function loadAir(lat,lon){
+try{
+const a=await fetch(
+`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5`
+).then(r=>r.json());
+const pm=Math.round(a.hourly.pm2_5[0]);
+aqi.textContent=pm;
+return pm;
+}catch{aqi.textContent="--";return 0;}
 }
 
-/* ===== UI ===== */
+/* WEATHER (FIXED) */
+async function loadWeather(lat,lon,city){
+cityName.textContent=city;
+
+const w=await fetch(
+`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}
+&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,is_day
+&hourly=time,temperature_2m,weather_code
+&daily=time,temperature_2m_max,temperature_2m_min,uv_index_max
+&timezone=auto`
+).then(r=>r.json());
+
+temp.textContent=Math.round(w.current.temperature_2m)+"°";
+desc.textContent=descText(w.current.weather_code);
+humidity.textContent=w.current.relative_humidity_2m+"%";
+wind.textContent=w.current.wind_speed_10m+" km/h";
+windDir.textContent=windDirText(w.current.wind_direction_10m);
+uv.textContent=w.daily.uv_index_max[0];
+localTime.textContent=new Date().toLocaleTimeString();
+
+renderHourly(w);
+renderDaily(w);
+updateMap(lat,lon);
+applyCanvasWeather(w.current.weather_code);
+generateAI(w,city);
+
+const pm=await loadAir(lat,lon);
+generateHealth(w,pm);
+}
+
+/* UI RENDER */
 function renderHourly(w){
-  hourlyStrip.innerHTML="";
-  for(let i=0;i<24;i++){
-    const h=new Date(w.hourly.time[i]).getHours();
-    hourlyStrip.innerHTML+=`
-    <div class="glass px-4 py-3 min-w-[90px] text-center">
-      <p class="text-xs">${h}:00</p>
-      <p class="font-bold">${Math.round(w.hourly.temperature_2m[i])}°</p>
-    </div>`;
-  }
+hourlyStrip.innerHTML="";
+for(let i=0;i<24;i++){
+const h=new Date(w.hourly.time[i]).getHours();
+hourlyStrip.innerHTML+=`<div class="glass p-3">${h}:00<br>${Math.round(w.hourly.temperature_2m[i])}°</div>`;
+}
 }
 
 function renderDaily(w){
-  daily.innerHTML="";
-  for(let i=0;i<7;i++){
-    const d=new Date(w.daily.time[i]).toLocaleDateString(undefined,{weekday:"short"});
-    daily.innerHTML+=`
-    <div class="glass px-3 py-2 flex justify-between">
-      <span>${d}</span>
-      <span>${Math.round(w.daily.temperature_2m_max[i])}° / ${Math.round(w.daily.temperature_2m_min[i])}°</span>
-    </div>`;
-  }
+daily.innerHTML="";
+for(let i=0;i<7;i++){
+const d=new Date(w.daily.time[i]).toLocaleDateString(undefined,{weekday:"short"});
+daily.innerHTML+=`<div class="glass p-2 flex justify-between"><span>${d}</span><span>${Math.round(w.daily.temperature_2m_max[i])}° / ${Math.round(w.daily.temperature_2m_min[i])}°</span></div>`;
+}
 }
 
-/* ===== AI ===== */
+/* AI */
 async function generateAI(w,city){
-  const key=`ai_${city}_${new Date().toDateString()}`;
-  const cached=localStorage.getItem(key);
-  if(cached){aiText.textContent=cached;return;}
-  try{
-    const r=await fetch("/api/ai-forecast",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({city,temp:w.current.temperature_2m,code:descText(w.current.weather_code)})});
-    const d=await r.json();
-    aiText.textContent=d.text;
-    localStorage.setItem(key,d.text);
-  }catch{
-    aiText.textContent="AI forecast unavailable.";
-  }
+try{
+const r=await fetch("/api/ai-forecast",{method:"POST",headers:{"Content-Type":"application/json"},
+body:JSON.stringify({city,temp:w.current.temperature_2m,code:descText(w.current.weather_code)})});
+const d=await r.json();
+aiText.textContent=d.text;
+}catch{aiText.textContent="AI unavailable";}
 }
 
-/* ===== HEALTH ===== */
-function generateHealth(w){
-  let t=[];
-  if(w.air_quality?.pm2_5?.[0]>60)t.push("Avoid outdoor activity due to pollution.");
-  if(w.daily.uv_index_max[0]>7)t.push("High UV — use sunscreen.");
-  healthAdvice.textContent=t.join(" ")||"Conditions are generally safe.";
+/* HEALTH */
+function generateHealth(w,pm){
+let t=[];
+if(pm>60)t.push("High pollution. Avoid outdoor activity.");
+if(w.daily.uv_index_max[0]>7)t.push("High UV. Use sunscreen.");
+healthAdvice.textContent=t.join(" ")||"Conditions are safe.";
 }
 voiceBtn.onclick=()=>speechSynthesis.speak(new SpeechSynthesisUtterance(healthAdvice.textContent));
 
-/* ===== HELPERS ===== */
+/* HELPERS */
 function descText(c){return{0:"Clear",1:"Partly Cloudy",2:"Cloudy",61:"Rain",71:"Snow",95:"Thunderstorm"}[c]||"Weather";}
-function windDirection(d){return["N","NE","E","SE","S","SW","W","NW"][Math.round(d/45)%8];}
+function windDirText(d){return["N","NE","E","SE","S","SW","W","NW"][Math.round(d/45)%8];}
 
-/* ===== CANVAS WEATHER ===== */
+/* CANVAS */
 const canvas=$("weatherCanvas"),ctx=canvas.getContext("2d");
-let particles=[],type="clear",flash=0;
 function resize(){canvas.width=innerWidth;canvas.height=innerHeight}
 resize();addEventListener("resize",resize);
-function createParticles(t){type=t;particles=[];for(let i=0;i<120;i++)particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,s:Math.random()*2+1});}
-function applyCanvasWeather(c){if(c===0)createParticles("clear");else if(c<=3)createParticles("cloud");else if(c<=67)createParticles("rain");else if(c<=77)createParticles("snow");}
-(function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  particles.forEach(p=>{
-    ctx.fillStyle="rgba(255,255,255,.7)";
-    if(type==="rain"){ctx.fillRect(p.x,p.y,2,10);p.y+=p.s*4;}
-    if(type==="snow"){ctx.beginPath();ctx.arc(p.x,p.y,2,0,Math.PI*2);ctx.fill();p.y+=p.s;}
-    if(type==="cloud"){ctx.beginPath();ctx.arc(p.x,p.y,20,0,Math.PI*2);ctx.fill();p.x+=.2;}
-    if(p.y>canvas.height)p.y=0;
-  });
-  if(type==="rain"&&Math.random()<.01)flash=2;
-  if(flash>0){ctx.fillStyle="rgba(255,255,255,.3)";ctx.fillRect(0,0,canvas.width,canvas.height);flash--;}
-  requestAnimationFrame(draw);
+let particles=[],mode="clear";
+function applyCanvasWeather(c){
+mode=c<=3?"cloud":c<=67?"rain":c<=77?"snow":"clear";
+particles=[...Array(120)].map(()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,s:Math.random()*2+1}));
+}
+(function anim(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+particles.forEach(p=>{
+ctx.fillStyle="rgba(255,255,255,.7)";
+if(mode==="rain"){ctx.fillRect(p.x,p.y,2,10);p.y+=p.s*4;}
+if(mode==="snow"){ctx.beginPath();ctx.arc(p.x,p.y,2,0,6.28);ctx.fill();p.y+=p.s;}
+if(p.y>canvas.height)p.y=0;
+});
+requestAnimationFrame(anim);
 })();
 
-/* ===== INIT ===== */
+/* INIT */
 (async()=>{
-  initMap();
-  const loc=await detectLocation();
-  loadWeather(loc.lat,loc.lon,loc.city);
-  setTimeout(loadAds,1500);
+initMap();
+const loc=await detectLocation();
+loadWeather(loc.lat,loc.lon,loc.city);
 })();
 </script>
 </body>
