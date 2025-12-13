@@ -1,22 +1,14 @@
 {
-  "builds": [
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "rewrites": [
     {
-      "src": "api/ai-forecast.js",
-      "use": "@vercel/node"
+      "source": "/api/(.*)",
+      "destination": "/api/ai-forecast.js"
     },
     {
-      "src": "*.{html,js,json}",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/ai-forecast.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
@@ -42,10 +34,6 @@
         {
           "key": "Permissions-Policy",
           "value": "geolocation=*, microphone=()"
-        },
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.open-meteo.com https://air-quality-api.open-meteo.com https://geocoding-api.open-meteo.com https://ipapi.co https://nominatim.openstreetmap.org; frame-src https://googleads.g.doubleclick.net; worker-src 'self' blob:; media-src 'self' data: https:;"
         }
       ]
     },
@@ -100,12 +88,5 @@
         }
       ]
     }
-  ],
-  "functions": {
-    "api/ai-forecast.js": {
-      "runtime": "nodejs18.x",
-      "maxDuration": 10,
-      "memory": 1024
-    }
-  }
+  ]
 }

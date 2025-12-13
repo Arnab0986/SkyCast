@@ -1,4 +1,4 @@
-// /api/ai-forecast.js - CommonJS version for Vercel
+// /api/ai-forecast.js - Simplified working version
 module.exports = async (req, res) => {
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -23,10 +23,10 @@ module.exports = async (req, res) => {
             city, 
             temperature, 
             condition, 
-            humidity, 
-            wind, 
-            uv, 
-            pm25 
+            humidity = 50, 
+            wind = 10, 
+            uv = 5, 
+            pm25 = 15 
         } = req.query;
         
         // Validate required parameters
@@ -34,16 +34,16 @@ module.exports = async (req, res) => {
             return res.status(400).json({ 
                 error: 'Missing required parameters',
                 required: ['city', 'temperature', 'condition'],
-                received: { city, temperature, condition, humidity, wind, uv, pm25 }
+                example: '/api/ai-forecast?city=London&temperature=22&condition=Sunny'
             });
         }
         
         // Parse parameters
         const temp = parseFloat(temperature);
-        const humidityValue = humidity ? parseFloat(humidity) : 50;
-        const windSpeed = wind ? parseFloat(wind) : 10;
-        const uvIndex = uv ? parseFloat(uv) : 5;
-        const pm25Value = pm25 ? parseFloat(pm25) : 15;
+        const humidityValue = parseFloat(humidity);
+        const windSpeed = parseFloat(wind);
+        const uvIndex = parseFloat(uv);
+        const pm25Value = parseFloat(pm25);
         
         // Validate numeric parameters
         if (isNaN(temp)) {
@@ -53,17 +53,17 @@ module.exports = async (req, res) => {
             });
         }
         
-        // Generate detailed AI forecast based on all parameters
+        // Generate AI forecast
         let forecast = '';
         let advice = '';
         
         // Temperature analysis
         if (temp > 35) {
             forecast = `Extreme heat in ${city} with ${condition}. `;
-            advice = 'Stay indoors during peak hours (12PM-4PM). Drink plenty of water and avoid strenuous activities. ';
+            advice = 'Stay indoors during peak hours (12PM-4PM). Drink plenty of water. ';
         } else if (temp > 30) {
             forecast = `Very warm in ${city} with ${condition}. `;
-            advice = 'Stay hydrated and limit sun exposure. Wear light-colored, loose-fitting clothing. ';
+            advice = 'Stay hydrated and limit sun exposure. Wear light-colored clothing. ';
         } else if (temp > 25) {
             forecast = `Warm in ${city} with ${condition}. `;
             advice = 'Pleasant weather for outdoor activities. Stay hydrated. ';
@@ -72,78 +72,31 @@ module.exports = async (req, res) => {
             advice = 'Perfect weather conditions. Enjoy outdoor activities. ';
         } else if (temp > 15) {
             forecast = `Cool in ${city} with ${condition}. `;
-            advice = 'A light jacket may be needed, especially in the evening. ';
+            advice = 'A light jacket may be needed. ';
         } else if (temp > 10) {
             forecast = `Chilly in ${city} with ${condition}. `;
             advice = 'Wear layers and consider a jacket. ';
         } else if (temp > 5) {
             forecast = `Cold in ${city} with ${condition}. `;
-            advice = 'Dress warmly with multiple layers. Limit time outdoors. ';
+            advice = 'Dress warmly with multiple layers. ';
         } else if (temp > 0) {
             forecast = `Very cold in ${city} with ${condition}. `;
-            advice = 'Bundle up with heavy coat, gloves, and hat. Avoid prolonged exposure. ';
+            advice = 'Bundle up with heavy coat, gloves, and hat. ';
         } else {
             forecast = `Freezing in ${city} with ${condition}. `;
-            advice = 'Extreme cold - minimize time outdoors. Watch for frostbite warning signs. ';
+            advice = 'Extreme cold - minimize time outdoors. Watch for frostbite. ';
         }
         
-        // Humidity consideration
-        if (humidityValue > 80) {
-            advice += 'High humidity may make it feel warmer. ';
-        } else if (humidityValue < 30) {
-            advice += 'Low humidity - stay hydrated as moisture evaporates quickly. ';
-        }
-        
-        // Wind consideration
-        if (windSpeed > 30) {
-            advice += 'Strong winds - secure loose objects and be cautious outdoors. ';
-        } else if (windSpeed > 20) {
-            advice += 'Breezy conditions - may feel cooler than actual temperature. ';
-        }
-        
-        // UV Index analysis
-        if (uvIndex > 10) {
-            advice += 'Extreme UV radiation - avoid sun between 10AM-4PM, use SPF 50+ sunscreen. ';
-        } else if (uvIndex > 7) {
-            advice += 'Very high UV - use SPF 30+ sunscreen, wear hat and sunglasses. ';
-        } else if (uvIndex > 5) {
-            advice += 'High UV - use SPF 15+ sunscreen, seek shade during midday. ';
-        } else if (uvIndex > 2) {
-            advice += 'Moderate UV - some protection recommended. ';
-        }
-        
-        // Air quality analysis
-        if (pm25Value > 150) {
-            advice += 'Hazardous air quality - avoid all outdoor activities, use air purifiers indoors. ';
-        } else if (pm25Value > 55) {
-            advice += 'Unhealthy air quality - limit outdoor exertion, sensitive groups stay indoors. ';
-        } else if (pm25Value > 35) {
-            advice += 'Moderate air quality - unusually sensitive individuals should reduce outdoor activity. ';
-        } else if (pm25Value > 12) {
-            advice += 'Good air quality - generally safe for everyone. ';
-        } else {
-            advice += 'Excellent air quality - ideal for outdoor activities. ';
-        }
-        
-        // Condition-specific advice
+        // Additional advice based on conditions
         const conditionLower = condition.toLowerCase();
         if (conditionLower.includes('rain') || conditionLower.includes('drizzle')) {
-            advice += 'Rain expected - carry an umbrella or raincoat, drive carefully on wet roads. ';
+            advice += 'Rain expected - carry an umbrella or raincoat. ';
         }
         if (conditionLower.includes('snow') || conditionLower.includes('ice')) {
-            advice += 'Snow/ice expected - wear waterproof boots, allow extra travel time, drive with caution. ';
+            advice += 'Snow/ice expected - wear waterproof boots, drive carefully. ';
         }
         if (conditionLower.includes('storm') || conditionLower.includes('thunder')) {
-            advice += 'Storm expected - seek shelter if outdoors, avoid open areas and tall trees. ';
-        }
-        if (conditionLower.includes('fog') || conditionLower.includes('mist')) {
-            advice += 'Reduced visibility - drive with headlights on low beam, allow extra following distance. ';
-        }
-        
-        // Time of day consideration (based on temperature pattern)
-        const hour = new Date().getHours();
-        if (hour >= 22 || hour <= 6) {
-            advice += 'Nighttime - temperatures may drop further, dress accordingly. ';
+            advice += 'Storm expected - seek shelter if outdoors. ';
         }
         
         // Generate AI response
@@ -163,15 +116,15 @@ module.exports = async (req, res) => {
                 uvIndex: {
                     value: uvIndex,
                     risk: getUVRisk(uvIndex)
-                },
-                generatedAt: new Date().toISOString(),
-                location: city,
-                model: 'skycast-ai-v2'
-            }
+                }
+            },
+            generatedAt: new Date().toISOString(),
+            location: city,
+            model: 'skycast-ai-v1'
         };
         
         // Cache control headers
-        res.setHeader('Cache-Control', 'public, max-age=1800'); // Cache for 30 minutes
+        res.setHeader('Cache-Control', 'public, max-age=1800');
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         
         return res.status(200).json(aiResponse);
@@ -182,7 +135,7 @@ module.exports = async (req, res) => {
         // Fallback response
         const fallbackResponse = {
             forecast: `Weather conditions in ${req.query.city || 'your location'} are ${req.query.condition || 'normal'} for this time of year.`,
-            advice: 'Check local weather updates for the most accurate information.',
+            advice: 'Check local weather updates for accurate information.',
             generatedAt: new Date().toISOString(),
             model: 'fallback'
         };
@@ -192,7 +145,7 @@ module.exports = async (req, res) => {
     }
 };
 
-// Helper function to get temperature feeling
+// Helper functions
 function getTemperatureFeeling(temp) {
     if (temp > 30) return 'hot';
     if (temp > 20) return 'warm';
@@ -201,7 +154,6 @@ function getTemperatureFeeling(temp) {
     return 'cold';
 }
 
-// Helper function to get AQI level
 function getAQILevel(pm25) {
     if (pm25 <= 12) return 'good';
     if (pm25 <= 35.4) return 'moderate';
@@ -210,7 +162,6 @@ function getAQILevel(pm25) {
     return 'hazardous';
 }
 
-// Helper function to get UV risk
 function getUVRisk(uvIndex) {
     if (uvIndex <= 2) return 'low';
     if (uvIndex <= 5) return 'moderate';

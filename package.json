@@ -5,9 +5,9 @@
   "type": "commonjs",
   "main": "index.html",
   "scripts": {
-    "dev": "echo 'Open index.html in browser'",
-    "build": "echo 'Build complete'",
-    "start": "npx serve . -p 3000"
+    "dev": "echo 'Development mode - open index.html in browser'",
+    "build": "echo 'Build complete' && exit 0",
+    "start": "echo 'Starting server...' && npx serve ."
   },
   "keywords": [
     "weather",
