@@ -1307,7 +1307,7 @@
                 return null;
             }
             
-            // Update weather UI with fetched data
+            // Update weather UI with fetched data - FIXED TEMPERATURE DISPLAY
             function updateWeatherUI() {
                 if (!appState.weatherData) return;
                 
@@ -1315,12 +1315,24 @@
                 const hourly = appState.weatherData.hourly;
                 const daily = appState.weatherData.daily;
                 
-                // Update current weather - FIXED TEMPERATURE DISPLAY
-                const tempValue = Math.round(current.temperature_2m);
+                // FIXED: Update current weather with proper unit conversion
+                let tempValue = Math.round(current.temperature_2m);
+                if (!appState.isCelsius) {
+                    // Convert to Fahrenheit if needed
+                    tempValue = Math.round((current.temperature_2m * 9/5) + 32);
+                }
                 elements.currentTemp.textContent = tempValue;
                 
                 elements.humidity.textContent = `${Math.round(current.relative_humidity_2m)}%`;
-                elements.windSpeed.textContent = `${Math.round(current.wind_speed_10m)} km/h`;
+                
+                // FIXED: Wind speed unit conversion
+                let windValue = Math.round(current.wind_speed_10m);
+                if (!config.useMetric) {
+                    windValue = Math.round(current.wind_speed_10m * 0.621371);
+                    elements.windSpeed.textContent = `${windValue} mph`;
+                } else {
+                    elements.windSpeed.textContent = `${windValue} km/h`;
+                }
                 
                 // Update UV index
                 if (daily.uv_index_max && daily.uv_index_max.length > 0) {
@@ -1376,7 +1388,7 @@
                 elements.localTime.textContent = `${timeString} • ${dateString}`;
             }
             
-            // Update hourly forecast
+            // Update hourly forecast with unit conversion
             function updateHourlyForecast(hourlyData) {
                 if (!hourlyData || !hourlyData.time || !hourlyData.temperature_2m) {
                     elements.hourlyForecast.innerHTML = '<div class="text-center py-4 opacity-70">Hourly forecast unavailable</div>';
@@ -1404,7 +1416,12 @@
                 
                 for (let i = currentIndex; i < currentIndex + hoursToShow; i++) {
                     const hourTime = new Date(hourlyData.time[i]);
-                    const hourTemp = Math.round(hourlyData.temperature_2m[i]);
+                    let hourTemp = Math.round(hourlyData.temperature_2m[i]);
+                    // Convert temperature if needed
+                    if (!appState.isCelsius) {
+                        hourTemp = Math.round((hourTemp * 9/5) + 32);
+                    }
+                    
                     const hour = hourTime.getHours();
                     const weatherCode = hourlyData.weather_code[i] || config.currentWeatherCode;
                     
@@ -1437,7 +1454,7 @@
                 }
             }
             
-            // Update weekly forecast
+            // Update weekly forecast with unit conversion
             function updateWeeklyForecast(dailyData) {
                 if (!dailyData || !dailyData.time || !dailyData.temperature_2m_max || !dailyData.temperature_2m_min) {
                     elements.weeklyForecast.innerHTML = '<div class="text-center py-4 opacity-70">Weekly forecast unavailable</div>';
@@ -1456,8 +1473,15 @@
                     const dayTime = new Date(dailyData.time[i]);
                     const dayIndex = (todayDay + i) % 7;
                     const dayName = i === 0 ? 'Today' : daysOfWeek[dayIndex];
-                    const maxTemp = Math.round(dailyData.temperature_2m_max[i]);
-                    const minTemp = Math.round(dailyData.temperature_2m_min[i]);
+                    
+                    let maxTemp = Math.round(dailyData.temperature_2m_max[i]);
+                    let minTemp = Math.round(dailyData.temperature_2m_min[i]);
+                    
+                    // Convert temperatures if needed
+                    if (!appState.isCelsius) {
+                        maxTemp = Math.round((maxTemp * 9/5) + 32);
+                        minTemp = Math.round((minTemp * 9/5) + 32);
+                    }
                     
                     const dayElement = document.createElement('div');
                     dayElement.className = 'flex justify-between items-center p-4 mb-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors';
@@ -1518,7 +1542,7 @@
                 elements.airQualityAdvice.textContent = aqiText;
             }
             
-            // Generate AI advisory based on weather and air quality
+            // Generate AI advisory based on weather and air quality - UPDATED VERSION
             async function generateAIAdvisory() {
                 if (!appState.weatherData || !appState.cityData) return;
                 
@@ -1532,23 +1556,46 @@
                 const humidity = current.relative_humidity_2m;
                 const windSpeed = current.wind_speed_10m;
                 
-                // Try to get AI forecast from API
+                // First show loading state
+                elements.aiForecastText.innerHTML = `
+                    <div class="skeleton h-4 w-full mb-2 rounded"></div>
+                    <div class="skeleton h-4 w-3/4 rounded"></div>
+                `;
+                
+                // Generate local advisory immediately
+                const localAdvisory = generateLocalAIAdvisory(cityName, temperature, conditionText, uvIndex, pm25, humidity, windSpeed);
+                elements.aiForecastText.textContent = localAdvisory;
+                
+                // Try to get enhanced AI forecast from API
                 try {
-                    const response = await fetch(`/api/ai-forecast?city=${encodeURIComponent(cityName)}&temperature=${temperature}&condition=${encodeURIComponent(conditionText)}&humidity=${humidity}&wind=${windSpeed}&uv=${uvIndex}&pm25=${pm25}`);
+                    const apiUrl = `/api/ai-forecast?city=${encodeURIComponent(cityName)}&temperature=${temperature}&condition=${encodeURIComponent(conditionText)}&humidity=${humidity}&wind=${windSpeed}&uv=${uvIndex}&pm25=${pm25}`;
+                    
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 3000);
+                    
+                    const response = await fetch(apiUrl, {
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
                     
                     if (response.ok) {
                         const data = await response.json();
-                        elements.aiForecastText.textContent = data.forecast + ' ' + data.advice;
-                        
-                        // Generate health advisory
-                        generateHealthAdvisory(uvIndex, pm25, temperature, conditionText);
-                        return;
+                        if (data.forecast && data.advice) {
+                            elements.aiForecastText.textContent = data.forecast + ' ' + data.advice;
+                        }
                     }
                 } catch (error) {
-                    console.log('AI API error, using local generation:', error);
+                    // Silently fail - we already have local advisory
+                    console.log('AI API unavailable, using local advisory');
                 }
                 
-                // Local AI generation as fallback
+                // Generate health advisory
+                generateHealthAdvisory(uvIndex, pm25, temperature, conditionText);
+            }
+            
+            // Generate local AI advisory as fallback
+            function generateLocalAIAdvisory(cityName, temperature, conditionText, uvIndex, pm25, humidity, windSpeed) {
                 let forecast = '';
                 let advice = '';
                 
@@ -1586,21 +1633,7 @@
                     advice += 'Moderate air quality - sensitive groups should take care. ';
                 }
                 
-                // Add condition-specific advice
-                if (config.currentWeatherCode >= 61 && config.currentWeatherCode <= 67) {
-                    advice += 'Rain expected - carry an umbrella. ';
-                } else if (config.currentWeatherCode >= 71 && config.currentWeatherCode <= 77) {
-                    advice += 'Snow expected - drive carefully if traveling. ';
-                } else if (config.currentWeatherCode >= 95 && config.currentWeatherCode <= 99) {
-                    advice += 'Thunderstorms likely - seek shelter if outdoors. ';
-                }
-                
-                // Combine forecast and advice
-                const aiText = forecast + advice;
-                elements.aiForecastText.textContent = aiText;
-                
-                // Generate health advisory
-                generateHealthAdvisory(uvIndex, pm25, temperature, conditionText);
+                return forecast + advice;
             }
             
             // Generate health advisory
@@ -1751,11 +1784,23 @@
             
             // Show fallback data if APIs fail
             function showFallbackData() {
-                const fallbackTemp = appState.isCelsius ? 24 : 75;
+                let fallbackTemp = 24;
+                if (!appState.isCelsius) {
+                    fallbackTemp = Math.round((24 * 9/5) + 32);
+                }
+                
                 elements.currentTemp.textContent = fallbackTemp;
                 elements.conditionText.textContent = 'Partly Cloudy';
                 elements.humidity.textContent = '65%';
-                elements.windSpeed.textContent = '12 km/h';
+                
+                let windValue = 12;
+                if (!config.useMetric) {
+                    windValue = Math.round(12 * 0.621371);
+                    elements.windSpeed.textContent = `${windValue} mph`;
+                } else {
+                    elements.windSpeed.textContent = `${windValue} km/h`;
+                }
+                
                 elements.uvIndex.textContent = '5.2';
                 elements.weatherIcon.textContent = config.isDay ? '⛅' : '🌙';
                 
@@ -1778,7 +1823,11 @@
                 
                 for (let i = 0; i < 12; i++) {
                     const hour = (currentHour + i) % 24;
-                    const temp = 20 + Math.sin(i * 0.5) * 5;
+                    let temp = 20 + Math.sin(i * 0.5) * 5;
+                    
+                    if (!appState.isCelsius) {
+                        temp = Math.round((temp * 9/5) + 32);
+                    }
                     
                     const hourElement = document.createElement('div');
                     hourElement.className = 'flex flex-col items-center justify-center min-w-16 p-3 rounded-xl bg-white/5 mr-4 flex-shrink-0';
@@ -1797,8 +1846,13 @@
                 const days = ['Today', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                 
                 for (let i = 0; i < 7; i++) {
-                    const maxTemp = 22 + Math.sin(i) * 6;
-                    const minTemp = maxTemp - 5;
+                    let maxTemp = 22 + Math.sin(i) * 6;
+                    let minTemp = maxTemp - 5;
+                    
+                    if (!appState.isCelsius) {
+                        maxTemp = Math.round((maxTemp * 9/5) + 32);
+                        minTemp = Math.round((minTemp * 9/5) + 32);
+                    }
                     
                     const dayElement = document.createElement('div');
                     dayElement.className = 'flex justify-between items-center p-4 mb-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors';
@@ -1875,9 +1929,11 @@
                 if (isCelsius) {
                     elements.celsiusBtn.classList.add('active');
                     elements.fahrenheitBtn.classList.remove('active');
+                    elements.currentTemp.textContent = '--';
                 } else {
                     elements.celsiusBtn.classList.remove('active');
                     elements.fahrenheitBtn.classList.add('active');
+                    elements.currentTemp.textContent = '--';
                 }
                 
                 // Refresh weather data with new units
@@ -1943,6 +1999,38 @@
                         document.body.removeChild(toast);
                     }, 300);
                 }, 3000);
+            }
+            
+            // Service Worker Registration with enhanced functionality
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js')
+                        .then(registration => {
+                            console.log('Service Worker registered:', registration);
+                            
+                            // Check for updates periodically
+                            setInterval(() => {
+                                registration.update();
+                            }, 60 * 60 * 1000); // Check every hour
+                            
+                            // Check for controllerchange to reload page when new SW takes over
+                            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                                window.location.reload();
+                            });
+                            
+                            // Register for periodic sync if supported
+                            if ('periodicSync' in registration) {
+                                registration.periodicSync.register('update-weather', {
+                                    minInterval: 24 * 60 * 60 * 1000 // 24 hours
+                                }).then(() => {
+                                    console.log('Periodic sync registered');
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.log('Service Worker registration failed:', error);
+                        });
+                });
             }
             
             // Initialize the app

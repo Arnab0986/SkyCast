@@ -9,13 +9,13 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "icon/icon-192.png",
+      "src": "/icon/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icon/icon-512.png",
+      "src": "/icon/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -23,19 +23,5 @@
   ],
   "categories": ["weather", "productivity", "utilities"],
   "lang": "en",
-  "dir": "ltr",
-  "screenshots": [
-    {
-      "src": "https://via.placeholder.com/540x720/0A84FF/ffffff?text=SkyCast+Weather",
-      "sizes": "540x720",
-      "type": "image/png",
-      "form_factor": "narrow"
-    },
-    {
-      "src": "https://via.placeholder.com/720x540/0A84FF/ffffff?text=SkyCast+Weather",
-      "sizes": "720x540",
-      "type": "image/png",
-      "form_factor": "wide"
-    }
-  ]
+  "dir": "ltr"
 }
