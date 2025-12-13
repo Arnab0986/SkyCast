@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkyCast - Weather Forecast</title>
+    <title>SkyCast - AI Weather Forecast</title>
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
@@ -15,10 +15,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌤️</text></svg>">
+    <!-- Google AdSense (Replace with your own ID) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
     
-    <!-- Apple-style glassmorphism -->
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32.png">
+    <link rel="apple-touch-icon" href="icon/apple-touch-icon.png">
+    
+    <!-- Apple-style glassmorphism styles -->
     <style>
         :root {
             --primary: #0A84FF;
@@ -41,6 +45,7 @@
             position: relative;
             color: #fff;
             transition: background 1.5s ease;
+            background: #0f172a;
         }
         
         /* Weather Backgrounds */
@@ -227,18 +232,7 @@
             justify-content: center;
             background: rgba(0, 0, 0, 0.2);
             border-radius: 12px;
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 640px) {
-            .glass-card {
-                border-radius: 16px;
-            }
-            
-            .container {
-                padding-left: 16px;
-                padding-right: 16px;
-            }
+            margin: 1rem 0;
         }
         
         /* Install PWA Button */
@@ -279,9 +273,50 @@
         .tts-btn:hover {
             background: rgba(255, 255, 255, 0.2);
         }
+        
+        /* Responsive Design */
+        @media (max-width: 640px) {
+            .glass-card {
+                border-radius: 16px;
+            }
+            
+            .container {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+            
+            #currentTemp {
+                font-size: 4rem;
+            }
+        }
+        
+        /* Temperature Unit Toggle */
+        .unit-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 4px;
+            display: inline-flex;
+        }
+        
+        .unit-btn {
+            padding: 4px 12px;
+            border-radius: 16px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .unit-btn.active {
+            background: var(--primary);
+            color: white;
+        }
     </style>
 </head>
-<body class="bg-gray-900">
+<body>
     <!-- Dynamic Weather Background -->
     <div id="weatherBackground" class="background-container"></div>
     
@@ -290,21 +325,23 @@
         <!-- Header with Location and PWA Install -->
         <header class="flex justify-between items-center mb-6">
             <div class="flex items-center space-x-2">
-                <h1 class="text-2xl font-bold">SkyCast</h1>
-                <span class="text-sm bg-blue-500/30 px-3 py-1 rounded-full">PWA</span>
+                <h1 class="text-2xl font-bold flex items-center">
+                    <span class="mr-2">🌤️</span> SkyCast
+                </h1>
+                <span class="text-xs bg-blue-500/30 px-2 py-1 rounded-full">PWA</span>
             </div>
             
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-3">
                 <!-- Location Display -->
                 <div id="locationDisplay" class="glass-card px-4 py-2">
                     <div class="flex items-center space-x-2">
-                        <i class="fas fa-location-dot text-blue-300"></i>
-                        <span id="cityName" class="font-medium">Detecting location...</span>
+                        <i class="fas fa-location-dot text-blue-300 text-sm"></i>
+                        <span id="cityName" class="font-medium text-sm">Detecting location...</span>
                     </div>
                 </div>
                 
-                <!-- Install PWA Button (Hidden by default) -->
-                <button id="installBtn" class="install-btn hidden">
+                <!-- Install PWA Button -->
+                <button id="installBtn" class="install-btn hidden text-sm">
                     <i class="fas fa-download"></i>
                     <span>Install</span>
                 </button>
@@ -316,27 +353,39 @@
             </div>
         </header>
         
-        <!-- Top Banner Ad Placeholder -->
+        <!-- Top Banner Ad -->
         <div class="mb-6">
-            <div id="bannerAd" class="ad-container">
-                <div class="text-center text-gray-300">
-                    <i class="fas fa-ad text-xl mb-2"></i>
-                    <p class="text-sm">Ad will load here</p>
-                </div>
+            <div class="ad-container">
+                <!-- Display: Banner Ad -->
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                     data-ad-slot="1234567890"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
             </div>
         </div>
         
         <!-- Current Weather Section -->
         <section class="mb-8">
             <div class="glass-card p-6">
-                <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
                     <!-- Temperature & Condition -->
                     <div class="text-center md:text-left mb-6 md:mb-0">
                         <div class="flex items-center justify-center md:justify-start mb-4">
                             <div id="weatherIcon" class="text-6xl mr-4">⛅</div>
                             <div>
-                                <div id="currentTemp" class="text-7xl font-bold">--°</div>
-                                <div id="conditionText" class="text-xl opacity-90">Loading...</div>
+                                <div class="flex items-baseline">
+                                    <div id="currentTemp" class="text-7xl font-bold">--</div>
+                                    <div class="unit-toggle ml-4">
+                                        <button id="celsiusBtn" class="unit-btn active">°C</button>
+                                        <button id="fahrenheitBtn" class="unit-btn">°F</button>
+                                    </div>
+                                </div>
+                                <div id="conditionText" class="text-xl opacity-90 mt-2">Loading...</div>
                             </div>
                         </div>
                         <div id="localTime" class="text-lg opacity-80">--:-- --</div>
@@ -382,7 +431,7 @@
         <section class="mb-8">
             <div class="glass-card p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold">
+                    <h2 class="text-xl font-bold flex items-center">
                         <i class="fas fa-robot mr-2"></i>AI Forecast & Health Advisory
                     </h2>
                     <button id="speakAdvisory" class="tts-btn" title="Read aloud">
@@ -394,10 +443,11 @@
                 <div id="aiForecast" class="mb-6 p-4 rounded-xl bg-white/5">
                     <div class="flex items-start">
                         <i class="fas fa-brain text-blue-400 mt-1 mr-3"></i>
-                        <div>
+                        <div class="flex-1">
                             <div class="font-medium mb-2">Today's Forecast</div>
                             <div id="aiForecastText" class="opacity-90">
-                                Loading AI-powered forecast...
+                                <div class="skeleton h-4 w-full mb-2 rounded"></div>
+                                <div class="skeleton h-4 w-3/4 rounded"></div>
                             </div>
                         </div>
                     </div>
@@ -425,20 +475,27 @@
                             <div class="font-medium">Health Advisory</div>
                         </div>
                         <div id="healthAdvisory" class="text-sm opacity-90">
-                            Combining UV index and air quality data for personalized health advice...
+                            <div class="skeleton h-3 w-full mb-1 rounded"></div>
+                            <div class="skeleton h-3 w-2/3 rounded"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
         
-        <!-- Inline Content Ad Placeholder -->
+        <!-- Inline Content Ad -->
         <div class="mb-8">
-            <div id="contentAd" class="ad-container">
-                <div class="text-center text-gray-300">
-                    <i class="fas fa-ad text-xl mb-2"></i>
-                    <p class="text-sm">Content ad will load here</p>
-                </div>
+            <div class="ad-container">
+                <!-- Display: In-Article Ad -->
+                <ins class="adsbygoogle"
+                     style="display:block; text-align:center;"
+                     data-ad-layout="in-article"
+                     data-ad-format="fluid"
+                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                     data-ad-slot="0987654321"></ins>
+                <script>
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
             </div>
         </div>
         
@@ -447,12 +504,17 @@
             <div class="glass-card p-6">
                 <h2 class="text-xl font-bold mb-4">24-Hour Forecast</h2>
                 <div id="hourlyForecast" class="hourly-scroll">
-                    <!-- Hourly forecast items will be added here -->
-                    <div class="skeleton w-16 h-24 rounded-xl mr-4"></div>
-                    <div class="skeleton w-16 h-24 rounded-xl mr-4"></div>
-                    <div class="skeleton w-16 h-24 rounded-xl mr-4"></div>
-                    <div class="skeleton w-16 h-24 rounded-xl mr-4"></div>
-                    <div class="skeleton w-16 h-24 rounded-xl mr-4"></div>
+                    <!-- Loading skeletons -->
+                    <div class="flex flex-col items-center justify-center min-w-16 p-3 rounded-xl bg-white/5 mr-4">
+                        <div class="skeleton h-4 w-10 mb-3 rounded"></div>
+                        <div class="skeleton h-8 w-8 rounded-full mb-2"></div>
+                        <div class="skeleton h-6 w-10 rounded"></div>
+                    </div>
+                    <div class="flex flex-col items-center justify-center min-w-16 p-3 rounded-xl bg-white/5 mr-4">
+                        <div class="skeleton h-4 w-10 mb-3 rounded"></div>
+                        <div class="skeleton h-8 w-8 rounded-full mb-2"></div>
+                        <div class="skeleton h-6 w-10 rounded"></div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -462,10 +524,14 @@
             <div class="glass-card p-6">
                 <h2 class="text-xl font-bold mb-4">7-Day Forecast</h2>
                 <div id="weeklyForecast">
-                    <!-- Weekly forecast items will be added here -->
-                    <div class="skeleton w-full h-12 rounded-xl mb-3"></div>
-                    <div class="skeleton w-full h-12 rounded-xl mb-3"></div>
-                    <div class="skeleton w-full h-12 rounded-xl mb-3"></div>
+                    <!-- Loading skeletons -->
+                    <div class="flex justify-between items-center p-4 mb-3 rounded-xl bg-white/5">
+                        <div class="skeleton h-4 w-16 rounded"></div>
+                        <div class="flex items-center">
+                            <div class="skeleton h-6 w-10 mr-4 rounded"></div>
+                            <div class="skeleton h-4 w-8 rounded"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -477,34 +543,43 @@
                 <p class="mt-1">AI-powered forecasts provide personalized insights</p>
             </div>
             <div class="flex justify-center space-x-6">
-                <button id="themeToggle" class="opacity-80 hover:opacity-100">
-                    <i class="fas fa-moon mr-1"></i> Dark Mode
+                <button id="themeToggle" class="opacity-80 hover:opacity-100 flex items-center">
+                    <i class="fas fa-moon mr-1"></i> <span>Theme</span>
                 </button>
-                <button id="unitsToggle" class="opacity-80 hover:opacity-100">
-                    <i class="fas fa-thermometer mr-1"></i> °C / °F
-                </button>
-                <a href="#" id="attributionBtn" class="opacity-80 hover:opacity-100">
-                    <i class="fas fa-info-circle mr-1"></i> Data Attribution
+                <a href="#" id="attributionBtn" class="opacity-80 hover:opacity-100 flex items-center">
+                    <i class="fas fa-info-circle mr-1"></i> <span>Attribution</span>
                 </a>
+                <button id="settingsBtn" class="opacity-80 hover:opacity-100 flex items-center">
+                    <i class="fas fa-cog mr-1"></i> <span>Settings</span>
+                </button>
+            </div>
+            <div class="mt-6 text-xs opacity-50">
+                <p>© 2024 SkyCast Weather. All weather data from Open-Meteo.</p>
             </div>
         </footer>
     </div>
     
     <!-- JavaScript -->
     <script>
-        // SkyCast Weather PWA - Main Application
+        // SkyCast Weather PWA - Complete Fixed Version
         document.addEventListener('DOMContentLoaded', () => {
             // App Configuration
             const config = {
                 openMeteoUrl: 'https://api.open-meteo.com/v1/forecast',
                 airQualityUrl: 'https://air-quality-api.open-meteo.com/v1/air-quality',
-                defaultLocation: { latitude: 28.6139, longitude: 77.2090 }, // New Delhi
-                units: 'celsius',
+                geocodingUrl: 'https://geocoding-api.open-meteo.com/v1/search',
+                defaultLocation: { 
+                    latitude: 28.6139, 
+                    longitude: 77.2090, 
+                    name: "New Delhi, India",
+                    country: "India"
+                },
                 isDay: true,
                 currentWeatherCode: 0,
                 isPWA: window.matchMedia('(display-mode: standalone)').matches || 
                        window.navigator.standalone || 
-                       document.referrer.includes('android-app://')
+                       document.referrer.includes('android-app://'),
+                useMetric: true
             };
             
             // DOM Elements
@@ -530,54 +605,54 @@
                 installBtn: document.getElementById('installBtn'),
                 refreshBtn: document.getElementById('refreshBtn'),
                 speakAdvisory: document.getElementById('speakAdvisory'),
-                bannerAd: document.getElementById('bannerAd'),
-                contentAd: document.getElementById('contentAd'),
                 themeToggle: document.getElementById('themeToggle'),
-                unitsToggle: document.getElementById('unitsToggle'),
-                attributionBtn: document.getElementById('attributionBtn')
+                attributionBtn: document.getElementById('attributionBtn'),
+                settingsBtn: document.getElementById('settingsBtn'),
+                celsiusBtn: document.getElementById('celsiusBtn'),
+                fahrenheitBtn: document.getElementById('fahrenheitBtn')
             };
             
             // State Management
             let appState = {
                 currentLocation: null,
+                cityData: null,
                 weatherData: null,
                 airQualityData: null,
                 deferredPrompt: null,
                 speechSynthesis: window.speechSynthesis,
                 isCelsius: true,
-                isDarkMode: true
+                isDarkMode: true,
+                useGeolocation: true,
+                userLocation: null,
+                currentTemperature: null
             };
             
             // Weather Code to Description Mapping (Open-Meteo)
             const weatherCodes = {
-                0: { day: 'Clear sky', night: 'Clear sky', icon: '☀️' },
-                1: { day: 'Mainly clear', night: 'Mainly clear', icon: '🌤️' },
-                2: { day: 'Partly cloudy', night: 'Partly cloudy', icon: '⛅' },
-                3: { day: 'Overcast', night: 'Overcast', icon: '☁️' },
-                45: { day: 'Foggy', night: 'Foggy', icon: '🌫️' },
-                48: { day: 'Depositing rime fog', night: 'Depositing rime fog', icon: '🌫️' },
-                51: { day: 'Light drizzle', night: 'Light drizzle', icon: '🌦️' },
-                53: { day: 'Moderate drizzle', night: 'Moderate drizzle', icon: '🌦️' },
-                55: { day: 'Dense drizzle', night: 'Dense drizzle', icon: '🌦️' },
-                56: { day: 'Light freezing drizzle', night: 'Light freezing drizzle', icon: '🌨️' },
-                57: { day: 'Dense freezing drizzle', night: 'Dense freezing drizzle', icon: '🌨️' },
-                61: { day: 'Slight rain', night: 'Slight rain', icon: '🌧️' },
-                63: { day: 'Moderate rain', night: 'Moderate rain', icon: '🌧️' },
-                65: { day: 'Heavy rain', night: 'Heavy rain', icon: '🌧️' },
-                66: { day: 'Light freezing rain', night: 'Light freezing rain', icon: '🌨️' },
-                67: { day: 'Heavy freezing rain', night: 'Heavy freezing rain', icon: '🌨️' },
-                71: { day: 'Slight snow', night: 'Slight snow', icon: '❄️' },
-                73: { day: 'Moderate snow', night: 'Moderate snow', icon: '❄️' },
-                75: { day: 'Heavy snow', night: 'Heavy snow', icon: '❄️' },
-                77: { day: 'Snow grains', night: 'Snow grains', icon: '❄️' },
-                80: { day: 'Slight rain showers', night: 'Slight rain showers', icon: '🌦️' },
-                81: { day: 'Moderate rain showers', night: 'Moderate rain showers', icon: '🌦️' },
-                82: { day: 'Violent rain showers', night: 'Violent rain showers', icon: '⛈️' },
-                85: { day: 'Slight snow showers', night: 'Slight snow showers', icon: '🌨️' },
-                86: { day: 'Heavy snow showers', night: 'Heavy snow showers', icon: '🌨️' },
-                95: { day: 'Thunderstorm', night: 'Thunderstorm', icon: '⛈️' },
-                96: { day: 'Thunderstorm with hail', night: 'Thunderstorm with hail', icon: '⛈️' },
-                99: { day: 'Heavy thunderstorm with hail', night: 'Heavy thunderstorm with hail', icon: '⛈️' }
+                0: { day: 'Clear sky', night: 'Clear sky', icon: { day: '☀️', night: '🌙' } },
+                1: { day: 'Mainly clear', night: 'Mainly clear', icon: { day: '🌤️', night: '🌙' } },
+                2: { day: 'Partly cloudy', night: 'Partly cloudy', icon: { day: '⛅', night: '☁️' } },
+                3: { day: 'Overcast', night: 'Overcast', icon: { day: '☁️', night: '☁️' } },
+                45: { day: 'Foggy', night: 'Foggy', icon: { day: '🌫️', night: '🌫️' } },
+                48: { day: 'Depositing rime fog', night: 'Depositing rime fog', icon: { day: '🌫️', night: '🌫️' } },
+                51: { day: 'Light drizzle', night: 'Light drizzle', icon: { day: '🌦️', night: '🌧️' } },
+                53: { day: 'Moderate drizzle', night: 'Moderate drizzle', icon: { day: '🌧️', night: '🌧️' } },
+                55: { day: 'Dense drizzle', night: 'Dense drizzle', icon: { day: '🌧️', night: '🌧️' } },
+                61: { day: 'Slight rain', night: 'Slight rain', icon: { day: '🌧️', night: '🌧️' } },
+                63: { day: 'Moderate rain', night: 'Moderate rain', icon: { day: '🌧️', night: '🌧️' } },
+                65: { day: 'Heavy rain', night: 'Heavy rain', icon: { day: '🌧️', night: '🌧️' } },
+                71: { day: 'Slight snow', night: 'Slight snow', icon: { day: '❄️', night: '❄️' } },
+                73: { day: 'Moderate snow', night: 'Moderate snow', icon: { day: '❄️', night: '❄️' } },
+                75: { day: 'Heavy snow', night: 'Heavy snow', icon: { day: '❄️', night: '❄️' } },
+                77: { day: 'Snow grains', night: 'Snow grains', icon: { day: '❄️', night: '❄️' } },
+                80: { day: 'Slight rain showers', night: 'Slight rain showers', icon: { day: '🌦️', night: '🌧️' } },
+                81: { day: 'Moderate rain showers', night: 'Moderate rain showers', icon: { day: '🌧️', night: '🌧️' } },
+                82: { day: 'Violent rain showers', night: 'Violent rain showers', icon: { day: '⛈️', night: '⛈️' } },
+                85: { day: 'Slight snow showers', night: 'Slight snow showers', icon: { day: '🌨️', night: '🌨️' } },
+                86: { day: 'Heavy snow showers', night: 'Heavy snow showers', icon: { day: '🌨️', night: '🌨️' } },
+                95: { day: 'Thunderstorm', night: 'Thunderstorm', icon: { day: '⛈️', night: '⛈️' } },
+                96: { day: 'Thunderstorm with hail', night: 'Thunderstorm with hail', icon: { day: '⛈️', night: '⛈️' } },
+                99: { day: 'Heavy thunderstorm with hail', night: 'Heavy thunderstorm with hail', icon: { day: '⛈️', night: '⛈️' } }
             };
             
             // Wind Direction Mapping
@@ -606,6 +681,7 @@
                 setupEventListeners();
                 setupPWA();
                 setupAds();
+                loadPreferences();
                 detectLocation();
             }
             
@@ -614,8 +690,10 @@
                 elements.refreshBtn.addEventListener('click', refreshWeather);
                 elements.speakAdvisory.addEventListener('click', speakAdvisory);
                 elements.themeToggle.addEventListener('click', toggleTheme);
-                elements.unitsToggle.addEventListener('click', toggleUnits);
                 elements.attributionBtn.addEventListener('click', showAttribution);
+                elements.settingsBtn.addEventListener('click', showSettings);
+                elements.celsiusBtn.addEventListener('click', () => setTemperatureUnit(true));
+                elements.fahrenheitBtn.addEventListener('click', () => setTemperatureUnit(false));
                 
                 // Listen for beforeinstallprompt event
                 window.addEventListener('beforeinstallprompt', (e) => {
@@ -625,14 +703,29 @@
                 });
                 
                 elements.installBtn.addEventListener('click', installPWA);
+                
+                // Listen for online/offline events
+                window.addEventListener('online', () => {
+                    showToast('Back online. Updating weather...');
+                    refreshWeather();
+                });
+                
+                window.addEventListener('offline', () => {
+                    showToast('You are offline. Using cached data.');
+                });
             }
             
             // Set up PWA functionality
             function setupPWA() {
+                // Register service worker
                 if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.register('sw.js').catch(err => {
-                        console.log('Service Worker registration failed:', err);
-                    });
+                    navigator.serviceWorker.register('sw.js')
+                        .then(registration => {
+                            console.log('Service Worker registered with scope:', registration.scope);
+                        })
+                        .catch(error => {
+                            console.log('Service Worker registration failed:', error);
+                        });
                 }
                 
                 // Update install button visibility based on PWA status
@@ -641,83 +734,228 @@
                 }
             }
             
-            // Set up ads (mock implementation - real AdSense would go here)
+            // Set up Google AdSense
             function setupAds() {
-                // In a real implementation, this would load AdSense scripts
-                // For this demo, we'll simulate ad loading
+                // Ads are already included in the HTML
+                // Additional ad logic can be added here
+                console.log('AdSense initialized');
+                
+                // Initialize ads after a short delay to ensure DOM is ready
                 setTimeout(() => {
-                    if (!config.isPWA) {
-                        // Show web ads
-                        elements.bannerAd.innerHTML = `
-                            <div class="text-center text-gray-300 p-4">
-                                <div class="mb-2">
-                                    <i class="fas fa-ad text-2xl text-yellow-400"></i>
-                                    <i class="fas fa-ad text-2xl text-blue-400 mx-2"></i>
-                                    <i class="fas fa-ad text-2xl text-green-400"></i>
-                                </div>
-                                <p class="text-sm mb-2">SkyCast is supported by ads</p>
-                                <p class="text-xs opacity-70">AdSense would load here in production</p>
-                            </div>
-                        `;
-                        
-                        elements.contentAd.innerHTML = `
-                            <div class="text-center text-gray-300 p-4">
-                                <div class="mb-2">
-                                    <i class="fas fa-megaphone text-xl text-purple-400"></i>
-                                </div>
-                                <p class="text-sm mb-1">Sponsored Content</p>
-                                <p class="text-xs opacity-70">Inline content advertisement</p>
-                            </div>
-                        `;
-                    } else {
-                        // Show PWA-only ad or alternative
-                        elements.bannerAd.innerHTML = `
-                            <div class="text-center text-gray-300 p-4">
-                                <p class="text-sm">Thank you for using SkyCast PWA!</p>
-                                <p class="text-xs opacity-70">Premium experience with fewer ads</p>
-                            </div>
-                        `;
-                        
-                        elements.contentAd.innerHTML = `
-                            <div class="text-center text-gray-300 p-4">
-                                <p class="text-sm">Support SkyCast</p>
-                                <p class="text-xs opacity-70">Consider upgrading to Premium</p>
-                            </div>
-                        `;
+                    try {
+                        // Re-push ads to ensure they load
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                    } catch (e) {
+                        console.log('AdSense error:', e);
                     }
-                }, 2000);
+                }, 1000);
+            }
+            
+            // Load user preferences from localStorage
+            function loadPreferences() {
+                try {
+                    const preferences = localStorage.getItem('skycast_preferences');
+                    if (preferences) {
+                        const prefs = JSON.parse(preferences);
+                        appState.isCelsius = prefs.isCelsius !== false;
+                        appState.isDarkMode = prefs.isDarkMode !== false;
+                        
+                        // Update UI
+                        setTemperatureUnit(appState.isCelsius);
+                        if (!appState.isDarkMode) {
+                            document.body.classList.remove('bg-gray-900');
+                            document.body.classList.add('bg-gray-100');
+                            elements.themeToggle.innerHTML = '<i class="fas fa-sun mr-1"></i> <span>Theme</span>';
+                        }
+                    }
+                } catch (e) {
+                    console.log('Error loading preferences:', e);
+                }
+            }
+            
+            // Save user preferences to localStorage
+            function savePreferences() {
+                try {
+                    const preferences = {
+                        isCelsius: appState.isCelsius,
+                        isDarkMode: appState.isDarkMode,
+                        lastLocation: appState.currentLocation,
+                        lastUpdate: Date.now()
+                    };
+                    localStorage.setItem('skycast_preferences', JSON.stringify(preferences));
+                } catch (e) {
+                    console.log('Error saving preferences:', e);
+                }
             }
             
             // Detect user location
-            function detectLocation() {
+            async function detectLocation() {
                 elements.cityName.textContent = 'Detecting location...';
                 
-                if (navigator.geolocation) {
+                // Check if we have a cached location
+                try {
+                    const cachedLocation = localStorage.getItem('skycast_location');
+                    if (cachedLocation) {
+                        const location = JSON.parse(cachedLocation);
+                        if (Date.now() - location.timestamp < 3600000) { // 1 hour cache
+                            appState.currentLocation = location.data;
+                            appState.cityData = location.cityData;
+                            elements.cityName.textContent = location.cityData.name || 'Your Location';
+                            fetchWeatherData();
+                            fetchAirQualityData();
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.log('Error reading cached location:', e);
+                }
+                
+                if (navigator.geolocation && appState.useGeolocation) {
                     navigator.geolocation.getCurrentPosition(
-                        position => {
+                        async (position) => {
                             appState.currentLocation = {
                                 latitude: position.coords.latitude,
                                 longitude: position.coords.longitude
                             };
-                            elements.cityName.textContent = 'Your Location';
+                            
+                            // Get city name from coordinates
+                            await getCityNameFromCoords(
+                                position.coords.latitude, 
+                                position.coords.longitude
+                            );
+                            
+                            // Cache the location
+                            cacheLocation();
+                            
                             fetchWeatherData();
                             fetchAirQualityData();
                         },
-                        error => {
+                        async (error) => {
                             console.log('Geolocation error:', error);
-                            appState.currentLocation = config.defaultLocation;
-                            elements.cityName.textContent = 'New Delhi, India';
-                            fetchWeatherData();
-                            fetchAirQualityData();
+                            // Fallback to IP-based location
+                            await getLocationByIP();
                         },
-                        { timeout: 10000 }
+                        { 
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 600000 // 10 minutes
+                        }
                     );
                 } else {
-                    appState.currentLocation = config.defaultLocation;
-                    elements.cityName.textContent = 'New Delhi, India';
-                    fetchWeatherData();
-                    fetchAirQualityData();
+                    // Use IP-based location
+                    await getLocationByIP();
                 }
+            }
+            
+            // Cache location data
+            function cacheLocation() {
+                try {
+                    const locationData = {
+                        data: appState.currentLocation,
+                        cityData: appState.cityData,
+                        timestamp: Date.now()
+                    };
+                    localStorage.setItem('skycast_location', JSON.stringify(locationData));
+                } catch (e) {
+                    console.log('Error caching location:', e);
+                }
+            }
+            
+            // Get city name from coordinates
+            async function getCityNameFromCoords(lat, lon) {
+                try {
+                    const response = await fetch(
+                        `${config.geocodingUrl}?latitude=${lat}&longitude=${lon}&count=1&language=en&format=json`
+                    );
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.results && data.results.length > 0) {
+                            const location = data.results[0];
+                            appState.cityData = {
+                                name: location.name,
+                                country: location.country,
+                                admin1: location.admin1,
+                                country_code: location.country_code
+                            };
+                            
+                            const displayName = location.admin1 ? 
+                                `${location.name}, ${location.admin1}, ${location.country_code}` :
+                                `${location.name}, ${location.country_code}`;
+                            
+                            elements.cityName.textContent = displayName;
+                            return;
+                        }
+                    }
+                    
+                    // Fallback to reverse geocoding via Open-Meteo
+                    const fallbackResponse = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`
+                    );
+                    
+                    if (fallbackResponse.ok) {
+                        const data = await fallbackResponse.json();
+                        if (data.address) {
+                            const city = data.address.city || data.address.town || data.address.village || data.address.county;
+                            const country = data.address.country;
+                            if (city && country) {
+                                appState.cityData = {
+                                    name: city,
+                                    country: country
+                                };
+                                elements.cityName.textContent = `${city}, ${country}`;
+                                return;
+                            }
+                        }
+                    }
+                    
+                    // Ultimate fallback
+                    elements.cityName.textContent = 'Your Location';
+                } catch (error) {
+                    console.error('Geocoding error:', error);
+                    elements.cityName.textContent = 'Your Location';
+                }
+            }
+            
+            // Get location by IP as fallback
+            async function getLocationByIP() {
+                try {
+                    const response = await fetch('https://ipapi.co/json/');
+                    if (response.ok) {
+                        const data = await response.json();
+                        appState.currentLocation = {
+                            latitude: data.latitude,
+                            longitude: data.longitude
+                        };
+                        appState.cityData = {
+                            name: data.city,
+                            country: data.country_name,
+                            country_code: data.country_code,
+                            region: data.region
+                        };
+                        elements.cityName.textContent = `${data.city}, ${data.country_code}`;
+                        
+                        // Cache the location
+                        cacheLocation();
+                        
+                        fetchWeatherData();
+                        fetchAirQualityData();
+                        return;
+                    }
+                } catch (error) {
+                    console.log('IP location failed:', error);
+                }
+                
+                // Ultimate fallback to default location
+                appState.currentLocation = config.defaultLocation;
+                appState.cityData = config.defaultLocation;
+                elements.cityName.textContent = config.defaultLocation.name;
+                
+                // Cache the location
+                cacheLocation();
+                
+                fetchWeatherData();
+                fetchAirQualityData();
             }
             
             // Fetch weather data from Open-Meteo
@@ -725,17 +963,22 @@
                 if (!appState.currentLocation) return;
                 
                 try {
+                    // Show loading state
+                    elements.currentTemp.textContent = '--';
+                    elements.conditionText.textContent = 'Loading...';
+                    
                     // Construct API URL with valid parameters
                     const params = new URLSearchParams({
                         latitude: appState.currentLocation.latitude,
                         longitude: appState.currentLocation.longitude,
                         current: 'temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,weather_code,is_day',
-                        hourly: 'temperature_2m',
+                        hourly: 'temperature_2m,weather_code',
                         daily: 'temperature_2m_max,temperature_2m_min,uv_index_max',
                         timezone: 'auto',
-                        temperature_unit: config.isCelsius ? 'celsius' : 'fahrenheit',
+                        temperature_unit: appState.isCelsius ? 'celsius' : 'fahrenheit',
                         wind_speed_unit: 'kmh',
-                        timeformat: 'iso8601'
+                        timeformat: 'iso8601',
+                        forecast_days: 7
                     });
                     
                     const response = await fetch(`${config.openMeteoUrl}?${params}`);
@@ -754,14 +997,63 @@
                     appState.weatherData = data;
                     config.isDay = data.current.is_day === 1;
                     config.currentWeatherCode = data.current.weather_code;
+                    appState.currentTemperature = data.current.temperature_2m;
                     
                     updateWeatherUI();
                     generateAIAdvisory();
                     updateBackground();
+                    
+                    // Cache weather data
+                    cacheWeatherData(data);
+                    
                 } catch (error) {
                     console.error('Error fetching weather:', error);
-                    showFallbackData();
+                    // Try to use cached data
+                    const cachedData = getCachedWeatherData();
+                    if (cachedData) {
+                        appState.weatherData = cachedData;
+                        config.isDay = cachedData.current.is_day === 1;
+                        config.currentWeatherCode = cachedData.current.weather_code;
+                        appState.currentTemperature = cachedData.current.temperature_2m;
+                        updateWeatherUI();
+                        generateAIAdvisory();
+                        updateBackground();
+                        showToast('Using cached weather data');
+                    } else {
+                        showFallbackData();
+                    }
                 }
+            }
+            
+            // Cache weather data
+            function cacheWeatherData(data) {
+                try {
+                    const cache = {
+                        data: data,
+                        timestamp: Date.now(),
+                        location: appState.currentLocation
+                    };
+                    localStorage.setItem('skycast_weather_cache', JSON.stringify(cache));
+                } catch (e) {
+                    console.log('Error caching weather data:', e);
+                }
+            }
+            
+            // Get cached weather data
+            function getCachedWeatherData() {
+                try {
+                    const cache = localStorage.getItem('skycast_weather_cache');
+                    if (cache) {
+                        const parsed = JSON.parse(cache);
+                        // Check if cache is less than 30 minutes old and same location
+                        if (Date.now() - parsed.timestamp < 1800000) {
+                            return parsed.data;
+                        }
+                    }
+                } catch (e) {
+                    console.log('Error reading cached weather:', e);
+                }
+                return null;
             }
             
             // Fetch air quality data from Open-Meteo
@@ -790,13 +1082,54 @@
                     
                     appState.airQualityData = data;
                     updateAirQualityUI();
+                    
+                    // Cache air quality data
+                    cacheAirQualityData(data);
+                    
                 } catch (error) {
                     console.error('Error fetching air quality:', error);
-                    // Set fallback air quality data
-                    elements.airQualityText.textContent = 'PM2.5: Data unavailable';
-                    elements.airQualityAdvice.textContent = 'Air quality data is currently unavailable.';
-                    elements.aqiValue.textContent = '--';
+                    // Try to use cached data
+                    const cachedData = getCachedAirQualityData();
+                    if (cachedData) {
+                        appState.airQualityData = cachedData;
+                        updateAirQualityUI();
+                    } else {
+                        elements.airQualityText.textContent = 'PM2.5: Data unavailable';
+                        elements.airQualityAdvice.textContent = 'Air quality data is currently unavailable.';
+                        elements.aqiValue.textContent = '--';
+                    }
                 }
+            }
+            
+            // Cache air quality data
+            function cacheAirQualityData(data) {
+                try {
+                    const cache = {
+                        data: data,
+                        timestamp: Date.now(),
+                        location: appState.currentLocation
+                    };
+                    localStorage.setItem('skycast_airquality_cache', JSON.stringify(cache));
+                } catch (e) {
+                    console.log('Error caching air quality data:', e);
+                }
+            }
+            
+            // Get cached air quality data
+            function getCachedAirQualityData() {
+                try {
+                    const cache = localStorage.getItem('skycast_airquality_cache');
+                    if (cache) {
+                        const parsed = JSON.parse(cache);
+                        // Check if cache is less than 1 hour old
+                        if (Date.now() - parsed.timestamp < 3600000) {
+                            return parsed.data;
+                        }
+                    }
+                } catch (e) {
+                    console.log('Error reading cached air quality:', e);
+                }
+                return null;
             }
             
             // Update weather UI with fetched data
@@ -807,8 +1140,10 @@
                 const hourly = appState.weatherData.hourly;
                 const daily = appState.weatherData.daily;
                 
-                // Update current weather
-                elements.currentTemp.textContent = `${Math.round(current.temperature_2m)}°`;
+                // Update current weather - FIXED TEMPERATURE DISPLAY
+                const tempValue = Math.round(current.temperature_2m);
+                elements.currentTemp.textContent = tempValue;
+                
                 elements.humidity.textContent = `${Math.round(current.relative_humidity_2m)}%`;
                 elements.windSpeed.textContent = `${Math.round(current.wind_speed_10m)} km/h`;
                 
@@ -835,11 +1170,15 @@
             
             // Update weather condition text and icon
             function updateWeatherCondition(weatherCode, isDay) {
-                const condition = weatherCodes[weatherCode] || { day: 'Unknown', night: 'Unknown', icon: '🌤️' };
-                const timeOfDay = isDay ? 'day' : 'night';
+                const condition = weatherCodes[weatherCode] || { 
+                    day: 'Unknown', 
+                    night: 'Unknown', 
+                    icon: { day: '🌤️', night: '🌙' } 
+                };
                 
+                const timeOfDay = isDay ? 'day' : 'night';
                 elements.conditionText.textContent = condition[timeOfDay] || condition.day;
-                elements.weatherIcon.textContent = condition.icon;
+                elements.weatherIcon.textContent = condition.icon[timeOfDay] || condition.icon.day;
                 
                 config.currentWeatherCode = weatherCode;
                 config.isDay = isDay;
@@ -856,7 +1195,7 @@
             // Update local time display
             function updateLocalTime() {
                 const now = new Date();
-                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
                 const dateString = now.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
                 
                 elements.localTime.textContent = `${timeString} • ${dateString}`;
@@ -871,52 +1210,56 @@
                 
                 elements.hourlyForecast.innerHTML = '';
                 
-                // Show next 24 hours
+                // Get current time
                 const now = new Date();
                 const currentHour = now.getHours();
                 
-                for (let i = 0; i < 24; i++) {
-                    const hourIndex = currentHour + i;
-                    if (hourIndex >= hourlyData.time.length) break;
-                    
-                    const hourTime = new Date(hourlyData.time[hourIndex]);
-                    const hourTemp = Math.round(hourlyData.temperature_2m[hourIndex]);
+                // Find current hour index
+                let currentIndex = 0;
+                for (let i = 0; i < hourlyData.time.length; i++) {
+                    const hourTime = new Date(hourlyData.time[i]);
+                    if (hourTime.getHours() >= currentHour) {
+                        currentIndex = i;
+                        break;
+                    }
+                }
+                
+                // Show next 24 hours (or less if not available)
+                const hoursToShow = Math.min(24, hourlyData.time.length - currentIndex);
+                
+                for (let i = currentIndex; i < currentIndex + hoursToShow; i++) {
+                    const hourTime = new Date(hourlyData.time[i]);
+                    const hourTemp = Math.round(hourlyData.temperature_2m[i]);
                     const hour = hourTime.getHours();
+                    const weatherCode = hourlyData.weather_code[i] || config.currentWeatherCode;
                     
                     const hourElement = document.createElement('div');
-                    hourElement.className = 'flex flex-col items-center justify-center min-w-16 p-3 rounded-xl bg-white/5 mr-4';
+                    hourElement.className = 'flex flex-col items-center justify-center min-w-16 p-3 rounded-xl bg-white/5 mr-4 flex-shrink-0';
+                    
+                    const isDayHour = hour >= 6 && hour < 18;
+                    const condition = weatherCodes[weatherCode] || { icon: { day: '🌤️', night: '🌙' } };
+                    const icon = isDayHour ? condition.icon.day : condition.icon.night;
+                    
+                    // Format hour display
+                    let hourDisplay;
+                    if (hour === 0) {
+                        hourDisplay = '12AM';
+                    } else if (hour < 12) {
+                        hourDisplay = `${hour}AM`;
+                    } else if (hour === 12) {
+                        hourDisplay = '12PM';
+                    } else {
+                        hourDisplay = `${hour - 12}PM`;
+                    }
                     
                     hourElement.innerHTML = `
-                        <div class="font-medium">${hour === 0 ? '12' : hour > 12 ? hour - 12 : hour}${hour >= 12 ? 'PM' : 'AM'}</div>
-                        <div class="text-2xl my-2">${getHourlyWeatherIcon(hour, config.currentWeatherCode)}</div>
-                        <div class="font-bold">${hourTemp}°</div>
+                        <div class="font-medium text-sm">${hourDisplay}</div>
+                        <div class="text-2xl my-2">${icon}</div>
+                        <div class="font-bold text-lg">${hourTemp}°</div>
                     `;
                     
                     elements.hourlyForecast.appendChild(hourElement);
                 }
-            }
-            
-            // Get appropriate icon for hourly forecast
-            function getHourlyWeatherIcon(hour, weatherCode) {
-                const isDayTime = hour >= 6 && hour < 18;
-                
-                if (weatherCode === 0) {
-                    return isDayTime ? '☀️' : '🌙';
-                } else if (weatherCode >= 1 && weatherCode <= 3) {
-                    return isDayTime ? '⛅' : '☁️';
-                } else if (weatherCode >= 45 && weatherCode <= 48) {
-                    return '🌫️';
-                } else if (weatherCode >= 51 && weatherCode <= 67) {
-                    return '🌧️';
-                } else if (weatherCode >= 71 && weatherCode <= 77) {
-                    return '❄️';
-                } else if (weatherCode >= 80 && weatherCode <= 86) {
-                    return isDayTime ? '🌦️' : '🌧️';
-                } else if (weatherCode >= 95 && weatherCode <= 99) {
-                    return '⛈️';
-                }
-                
-                return '🌤️';
             }
             
             // Update weekly forecast
@@ -929,22 +1272,25 @@
                 elements.weeklyForecast.innerHTML = '';
                 
                 const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const today = new Date();
+                const todayDay = today.getDay();
                 
                 for (let i = 0; i < 7; i++) {
                     if (i >= dailyData.time.length) break;
                     
                     const dayTime = new Date(dailyData.time[i]);
-                    const dayName = i === 0 ? 'Today' : daysOfWeek[dayTime.getDay()];
+                    const dayIndex = (todayDay + i) % 7;
+                    const dayName = i === 0 ? 'Today' : daysOfWeek[dayIndex];
                     const maxTemp = Math.round(dailyData.temperature_2m_max[i]);
                     const minTemp = Math.round(dailyData.temperature_2m_min[i]);
                     
                     const dayElement = document.createElement('div');
-                    dayElement.className = 'flex justify-between items-center p-4 mb-3 rounded-xl bg-white/5';
+                    dayElement.className = 'flex justify-between items-center p-4 mb-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors';
                     
                     dayElement.innerHTML = `
                         <div class="font-medium">${dayName}</div>
                         <div class="flex items-center">
-                            <div class="text-lg font-bold mr-4">${maxTemp}°</div>
+                            <div class="text-lg font-bold mr-6">${maxTemp}°</div>
                             <div class="opacity-70">${minTemp}°</div>
                         </div>
                     `;
@@ -973,65 +1319,86 @@
                 if (pm25 <= 12) {
                     aqiLevel = 'Good';
                     aqiText = 'Air quality is satisfactory';
-                    aqiColor = 'bg-green-500/30';
+                    aqiColor = 'bg-green-500/30 text-green-300';
                 } else if (pm25 <= 35.4) {
                     aqiLevel = 'Moderate';
                     aqiText = 'Acceptable air quality';
-                    aqiColor = 'bg-yellow-500/30';
+                    aqiColor = 'bg-yellow-500/30 text-yellow-300';
                 } else if (pm25 <= 55.4) {
                     aqiLevel = 'Unhealthy for Sensitive';
                     aqiText = 'Members of sensitive groups may experience effects';
-                    aqiColor = 'bg-orange-500/30';
+                    aqiColor = 'bg-orange-500/30 text-orange-300';
                 } else if (pm25 <= 150.4) {
                     aqiLevel = 'Unhealthy';
                     aqiText = 'Everyone may begin to experience health effects';
-                    aqiColor = 'bg-red-500/30';
+                    aqiColor = 'bg-red-500/30 text-red-300';
                 } else {
                     aqiLevel = 'Very Unhealthy';
                     aqiText = 'Health alert: risk of serious effects';
-                    aqiColor = 'bg-purple-500/30';
+                    aqiColor = 'bg-purple-500/30 text-purple-300';
                 }
                 
                 elements.aqiValue.textContent = aqiLevel;
-                elements.aqiValue.className = `px-3 py-1 rounded-full ${aqiColor} text-sm`;
+                elements.aqiValue.className = `px-3 py-1 rounded-full ${aqiColor} text-sm font-medium`;
                 elements.airQualityAdvice.textContent = aqiText;
             }
             
             // Generate AI advisory based on weather and air quality
-            function generateAIAdvisory() {
-                if (!appState.weatherData || !appState.airQualityData) {
-                    elements.aiForecastText.textContent = 'AI forecast is currently unavailable. Please check your connection.';
-                    return;
-                }
+            async function generateAIAdvisory() {
+                if (!appState.weatherData || !appState.cityData) return;
                 
                 const current = appState.weatherData.current;
                 const weatherCondition = weatherCodes[config.currentWeatherCode] || { day: 'clear' };
                 const conditionText = config.isDay ? weatherCondition.day : weatherCondition.night;
                 const temperature = Math.round(current.temperature_2m);
                 const uvIndex = appState.weatherData.daily?.uv_index_max?.[0] || 0;
-                const pm25 = appState.airQualityData.current?.pm2_5 || 15;
+                const pm25 = appState.airQualityData?.current?.pm2_5 || 15;
+                const cityName = appState.cityData.name || 'your location';
+                const humidity = current.relative_humidity_2m;
+                const windSpeed = current.wind_speed_10m;
                 
-                // Simple AI logic (in production, this would call a serverless function)
+                // Try to get AI forecast from API
+                try {
+                    const response = await fetch(`/api/ai-forecast?city=${encodeURIComponent(cityName)}&temperature=${temperature}&condition=${encodeURIComponent(conditionText)}&humidity=${humidity}&wind=${windSpeed}&uv=${uvIndex}&pm25=${pm25}`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        elements.aiForecastText.textContent = data.forecast + ' ' + data.advice;
+                        
+                        // Generate health advisory
+                        generateHealthAdvisory(uvIndex, pm25, temperature, conditionText);
+                        return;
+                    }
+                } catch (error) {
+                    console.log('AI API error, using local generation:', error);
+                }
+                
+                // Local AI generation as fallback
                 let forecast = '';
                 let advice = '';
                 
-                // Generate forecast based on temperature and condition
+                // Temperature-based forecast
                 if (temperature > 30) {
-                    forecast = `It's a warm ${config.isDay ? 'day' : 'night'} with ${conditionText.toLowerCase()}. `;
+                    forecast = `It's quite warm in ${cityName} with ${conditionText.toLowerCase()}. `;
                     advice = 'Stay hydrated and avoid prolonged sun exposure. ';
                 } else if (temperature > 20) {
-                    forecast = `Enjoy pleasant temperatures with ${conditionText.toLowerCase()}. `;
+                    forecast = `Enjoy pleasant temperatures in ${cityName} with ${conditionText.toLowerCase()}. `;
                     advice = 'Perfect weather for outdoor activities. ';
                 } else if (temperature > 10) {
-                    forecast = `It's cool with ${conditionText.toLowerCase()}. `;
+                    forecast = `It's cool in ${cityName} with ${conditionText.toLowerCase()}. `;
                     advice = 'A light jacket would be comfortable. ';
-                } else {
-                    forecast = `It's cold with ${conditionText.toLowerCase()}. `;
+                } else if (temperature > 0) {
+                    forecast = `It's cold in ${cityName} with ${conditionText.toLowerCase()}. `;
                     advice = 'Dress warmly and limit time outdoors. ';
+                } else {
+                    forecast = `It's freezing in ${cityName} with ${conditionText.toLowerCase()}. `;
+                    advice = 'Bundle up and avoid prolonged exposure. ';
                 }
                 
                 // Add UV advice
-                if (uvIndex > 6) {
+                if (uvIndex > 8) {
+                    advice += 'UV index is very high - use sunscreen and seek shade. ';
+                } else if (uvIndex > 6) {
                     advice += 'UV index is high - use sunscreen. ';
                 } else if (uvIndex > 3) {
                     advice += 'Moderate UV - some protection needed. ';
@@ -1048,7 +1415,7 @@
                 if (config.currentWeatherCode >= 61 && config.currentWeatherCode <= 67) {
                     advice += 'Rain expected - carry an umbrella. ';
                 } else if (config.currentWeatherCode >= 71 && config.currentWeatherCode <= 77) {
-                    advice += 'Snow expected - drive carefully. ';
+                    advice += 'Snow expected - drive carefully if traveling. ';
                 } else if (config.currentWeatherCode >= 95 && config.currentWeatherCode <= 99) {
                     advice += 'Thunderstorms likely - seek shelter if outdoors. ';
                 }
@@ -1057,36 +1424,34 @@
                 const aiText = forecast + advice;
                 elements.aiForecastText.textContent = aiText;
                 
-                // Update health advisory
+                // Generate health advisory
+                generateHealthAdvisory(uvIndex, pm25, temperature, conditionText);
+            }
+            
+            // Generate health advisory
+            function generateHealthAdvisory(uvIndex, pm25, temperature, condition) {
                 let healthText = '';
                 
-                if (pm25 > 55 || uvIndex > 6) {
+                if (pm25 > 55 || uvIndex > 8) {
                     healthText = '⚠️ Consider limiting outdoor activities today due to ';
-                    if (pm25 > 55 && uvIndex > 6) {
-                        healthText += 'poor air quality and high UV index.';
+                    if (pm25 > 55 && uvIndex > 8) {
+                        healthText += 'poor air quality and very high UV index.';
                     } else if (pm25 > 55) {
                         healthText += 'poor air quality.';
                     } else {
-                        healthText += 'high UV index.';
+                        healthText += 'very high UV index.';
                     }
-                } else if (pm25 > 35 || uvIndex > 3) {
+                } else if (pm25 > 35 || uvIndex > 6) {
                     healthText = 'ℹ️ Generally safe conditions with some precautions advised.';
+                } else if (temperature < 0 && condition.toLowerCase().includes('snow')) {
+                    healthText = '❄️ Cold and snowy - dress warmly and watch for icy conditions.';
+                } else if (temperature > 30) {
+                    healthText = '🔥 Very warm - stay hydrated and avoid peak sun hours.';
                 } else {
                     healthText = '✅ Excellent conditions for outdoor activities.';
                 }
                 
                 elements.healthAdvisory.textContent = healthText;
-                
-                // Cache the AI forecast
-                try {
-                    localStorage.setItem('skycast_ai_cache', JSON.stringify({
-                        text: aiText,
-                        timestamp: Date.now(),
-                        location: appState.currentLocation
-                    }));
-                } catch (e) {
-                    console.log('Failed to cache AI forecast:', e);
-                }
             }
             
             // Update animated background based on weather
@@ -1094,67 +1459,41 @@
                 elements.weatherBackground.innerHTML = '';
                 elements.weatherBackground.className = 'background-container';
                 
-                let backgroundClass = '';
                 let particleCount = 0;
                 
                 // Determine background based on weather code and time
                 if (config.currentWeatherCode === 0) {
-                    backgroundClass = config.isDay ? 'day-clear' : 'night-clear';
-                    
                     if (config.isDay) {
-                        // Add clouds for day clear
-                        for (let i = 0; i < 5; i++) {
-                            createCloud(i);
-                        }
+                        elements.weatherBackground.classList.add('day-clear');
+                        for (let i = 0; i < 5; i++) createCloud(i);
                     } else {
-                        // Add stars for night clear
-                        for (let i = 0; i < 50; i++) {
-                            createStar(i);
-                        }
+                        elements.weatherBackground.classList.add('night-clear');
+                        for (let i = 0; i < 50; i++) createStar(i);
                     }
                 } else if (config.currentWeatherCode >= 61 && config.currentWeatherCode <= 67) {
-                    backgroundClass = 'rain';
+                    elements.weatherBackground.classList.add('rain');
                     particleCount = 80;
-                    
-                    for (let i = 0; i < particleCount; i++) {
-                        createRaindrop(i);
-                    }
+                    for (let i = 0; i < particleCount; i++) createRaindrop(i);
                 } else if (config.currentWeatherCode >= 71 && config.currentWeatherCode <= 77) {
-                    backgroundClass = 'snow';
+                    elements.weatherBackground.classList.add('snow');
                     particleCount = 60;
-                    
-                    for (let i = 0; i < particleCount; i++) {
-                        createSnowflake(i);
-                    }
+                    for (let i = 0; i < particleCount; i++) createSnowflake(i);
                 } else if (config.currentWeatherCode >= 95 && config.currentWeatherCode <= 99) {
-                    backgroundClass = 'thunderstorm';
+                    elements.weatherBackground.classList.add('thunderstorm');
                     particleCount = 60;
-                    
-                    // Add lightning effect
                     const lightning = document.createElement('div');
                     lightning.className = 'lightning';
                     elements.weatherBackground.appendChild(lightning);
-                    
-                    // Add rain
-                    for (let i = 0; i < particleCount; i++) {
-                        createRaindrop(i);
-                    }
+                    for (let i = 0; i < particleCount; i++) createRaindrop(i);
                 } else {
-                    // Default to day or night based on isDay
-                    backgroundClass = config.isDay ? 'day-clear' : 'night-clear';
-                    
                     if (config.isDay) {
-                        for (let i = 0; i < 3; i++) {
-                            createCloud(i);
-                        }
+                        elements.weatherBackground.classList.add('day-clear');
+                        for (let i = 0; i < 3; i++) createCloud(i);
                     } else {
-                        for (let i = 0; i < 30; i++) {
-                            createStar(i);
-                        }
+                        elements.weatherBackground.classList.add('night-clear');
+                        for (let i = 0; i < 30; i++) createStar(i);
                     }
                 }
-                
-                elements.weatherBackground.classList.add(backgroundClass);
             }
             
             // Create cloud element
@@ -1237,22 +1576,22 @@
             
             // Show fallback data if APIs fail
             function showFallbackData() {
-                elements.currentTemp.textContent = '24°';
+                const fallbackTemp = appState.isCelsius ? 24 : 75;
+                elements.currentTemp.textContent = fallbackTemp;
                 elements.conditionText.textContent = 'Partly Cloudy';
                 elements.humidity.textContent = '65%';
                 elements.windSpeed.textContent = '12 km/h';
                 elements.uvIndex.textContent = '5.2';
-                elements.weatherIcon.textContent = '⛅';
+                elements.weatherIcon.textContent = config.isDay ? '⛅' : '🌙';
                 
                 updateLocalTime();
                 updateWindDirection(180);
                 
-                // Show fallback forecasts
-                elements.aiForecastText.textContent = 'AI forecast is temporarily unavailable. Weather data is from cached sources.';
+                elements.aiForecastText.textContent = 'Weather data is currently unavailable. Please check your connection.';
                 elements.healthAdvisory.textContent = 'For accurate health advisories, please check back when connection is restored.';
                 
-                // Show fallback hourly and weekly data
                 showFallbackForecasts();
+                showToast('Using fallback data - check connection');
             }
             
             // Show fallback forecasts
@@ -1267,12 +1606,12 @@
                     const temp = 20 + Math.sin(i * 0.5) * 5;
                     
                     const hourElement = document.createElement('div');
-                    hourElement.className = 'flex flex-col items-center justify-center min-w-16 p-3 rounded-xl bg-white/5 mr-4';
+                    hourElement.className = 'flex flex-col items-center justify-center min-w-16 p-3 rounded-xl bg-white/5 mr-4 flex-shrink-0';
                     
                     hourElement.innerHTML = `
-                        <div class="font-medium">${hour === 0 ? '12' : hour > 12 ? hour - 12 : hour}${hour >= 12 ? 'PM' : 'AM'}</div>
+                        <div class="font-medium text-sm">${hour === 0 || hour === 12 ? '12' : hour % 12}${hour < 12 ? 'AM' : 'PM'}</div>
                         <div class="text-2xl my-2">${hour >= 6 && hour < 18 ? '⛅' : '🌙'}</div>
-                        <div class="font-bold">${Math.round(temp)}°</div>
+                        <div class="font-bold text-lg">${Math.round(temp)}°</div>
                     `;
                     
                     elements.hourlyForecast.appendChild(hourElement);
@@ -1287,12 +1626,12 @@
                     const minTemp = maxTemp - 5;
                     
                     const dayElement = document.createElement('div');
-                    dayElement.className = 'flex justify-between items-center p-4 mb-3 rounded-xl bg-white/5';
+                    dayElement.className = 'flex justify-between items-center p-4 mb-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors';
                     
                     dayElement.innerHTML = `
                         <div class="font-medium">${days[i]}</div>
                         <div class="flex items-center">
-                            <div class="text-lg font-bold mr-4">${Math.round(maxTemp)}°</div>
+                            <div class="text-lg font-bold mr-6">${Math.round(maxTemp)}°</div>
                             <div class="opacity-70">${Math.round(minTemp)}°</div>
                         </div>
                     `;
@@ -1330,7 +1669,7 @@
                     elements.speakAdvisory.innerHTML = '<i class="fas fa-stop"></i>';
                 };
                 
-                utterance.onend = () => {
+                utterance.onend = utterance.onerror = () => {
                     elements.speakAdvisory.innerHTML = '<i class="fas fa-volume-up"></i>';
                 };
                 
@@ -1344,32 +1683,47 @@
                 if (appState.isDarkMode) {
                     document.body.classList.add('bg-gray-900');
                     document.body.classList.remove('bg-gray-100');
-                    elements.themeToggle.innerHTML = '<i class="fas fa-moon mr-1"></i> Dark Mode';
+                    elements.themeToggle.innerHTML = '<i class="fas fa-moon mr-1"></i> <span>Theme</span>';
                 } else {
                     document.body.classList.remove('bg-gray-900');
                     document.body.classList.add('bg-gray-100');
-                    elements.themeToggle.innerHTML = '<i class="fas fa-sun mr-1"></i> Light Mode';
+                    elements.themeToggle.innerHTML = '<i class="fas fa-sun mr-1"></i> <span>Theme</span>';
                 }
+                
+                savePreferences();
             }
             
-            // Toggle between Celsius and Fahrenheit
-            function toggleUnits() {
-                appState.isCelsius = !appState.isCelsius;
-                config.isCelsius = appState.isCelsius;
+            // Set temperature unit
+            function setTemperatureUnit(isCelsius) {
+                appState.isCelsius = isCelsius;
                 
-                elements.unitsToggle.innerHTML = appState.isCelsius ? 
-                    '<i class="fas fa-thermometer mr-1"></i> °C / °F' : 
-                    '<i class="fas fa-thermometer mr-1"></i> °F / °C';
+                if (isCelsius) {
+                    elements.celsiusBtn.classList.add('active');
+                    elements.fahrenheitBtn.classList.remove('active');
+                } else {
+                    elements.celsiusBtn.classList.remove('active');
+                    elements.fahrenheitBtn.classList.add('active');
+                }
                 
                 // Refresh weather data with new units
                 if (appState.currentLocation) {
                     fetchWeatherData();
                 }
+                
+                savePreferences();
             }
             
             // Show data attribution
             function showAttribution() {
-                alert('SkyCast uses weather data from Open-Meteo (open-meteo.com).\n\nOpen-Meteo provides free weather API with data from various sources including NOAA, GFS, and others.\n\nAir quality data is also provided by Open-Meteo Air Quality API.');
+                alert('SkyCast Weather PWA\n\nWeather Data: Open-Meteo API\nAir Quality: Open-Meteo Air Quality API\nGeocoding: Open-Meteo Geocoding API\nIcons: Font Awesome\nFonts: Google Fonts\nUI Framework: Tailwind CSS\n\n© 2024 SkyCast Weather - All rights reserved');
+            }
+            
+            // Show settings
+            function showSettings() {
+                alert('Settings\n\n• Temperature Unit: ' + (appState.isCelsius ? 'Celsius' : 'Fahrenheit') + 
+                      '\n• Theme: ' + (appState.isDarkMode ? 'Dark' : 'Light') +
+                      '\n• Location: ' + (appState.useGeolocation ? 'GPS Enabled' : 'IP-based') +
+                      '\n\nTo change settings, use the buttons in the app.');
             }
             
             // Install PWA
@@ -1382,10 +1736,37 @@
                     if (choiceResult.outcome === 'accepted') {
                         console.log('User accepted PWA installation');
                         elements.installBtn.classList.add('hidden');
+                        showToast('SkyCast installed successfully!');
                     }
                     
                     appState.deferredPrompt = null;
                 });
+            }
+            
+            // Show toast notification
+            function showToast(message) {
+                // Create toast element
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-4 right-4 glass-card px-4 py-3 rounded-lg z-50 transform translate-y-0 opacity-0 transition-all duration-300';
+                toast.textContent = message;
+                toast.style.maxWidth = '300px';
+                
+                document.body.appendChild(toast);
+                
+                // Animate in
+                setTimeout(() => {
+                    toast.classList.remove('opacity-0');
+                    toast.classList.add('opacity-100');
+                }, 10);
+                
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    toast.classList.remove('opacity-100');
+                    toast.classList.add('opacity-0');
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 300);
+                }, 3000);
             }
             
             // Initialize the app
