@@ -1,4 +1,19 @@
 {
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_ADSENSE_CLIENT_ID": "@adsense_client_id",
+      "NEXT_PUBLIC_ADSENSE_BANNER_SLOT": "@adsense_banner_slot",
+      "NEXT_PUBLIC_ADSENSE_CONTENT_SLOT": "@adsense_content_slot"
+    }
+  },
+  "buildCommand": "chmod +x build.sh && ./build.sh",
+  "outputDirectory": ".",
+  "functions": {
+    "api/ai-forecast.js": {
+      "maxDuration": 10,
+      "memory": 1024
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",
@@ -22,6 +37,10 @@
         {
           "key": "Permissions-Policy",
           "value": "geolocation=*, microphone=()"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.open-meteo.com https://air-quality-api.open-meteo.com https://geocoding-api.open-meteo.com https://ipapi.co https://nominatim.openstreetmap.org; frame-src https://googleads.g.doubleclick.net; worker-src 'self' blob:; media-src 'self' data: https:;"
         }
       ]
     },
@@ -61,6 +80,14 @@
         {
           "key": "Access-Control-Allow-Origin",
           "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
         }
       ]
     }

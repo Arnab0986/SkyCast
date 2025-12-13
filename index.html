@@ -15,8 +15,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Google AdSense (Replace with your own ID) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+    <!-- Google AdSense with YOUR ACTUAL ID -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1866633787679432" crossorigin="anonymous"></script>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32.png">
@@ -314,6 +314,54 @@
             background: var(--primary);
             color: white;
         }
+        
+        /* Ad loading animation */
+        .ad-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .ad-loading::after {
+            content: '';
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: ad-spin 1s linear infinite;
+        }
+        
+        @keyframes ad-spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Ad placeholder styling */
+        .ad-placeholder {
+            background: linear-gradient(135deg, rgba(10, 132, 255, 0.1), rgba(0, 102, 204, 0.1));
+            border: 1px dashed rgba(10, 132, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        /* Responsive ad adjustments */
+        @media (max-width: 768px) {
+            .ad-container {
+                min-height: 80px;
+                margin: 0.75rem 0;
+            }
+            
+            .ad-container ins {
+                width: 100% !important;
+                height: auto !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -356,11 +404,11 @@
         <!-- Top Banner Ad -->
         <div class="mb-6">
             <div class="ad-container">
-                <!-- Display: Banner Ad -->
+                <!-- Display: Top Banner Ad (Your Slot ID: 8088747076) -->
                 <ins class="adsbygoogle"
                      style="display:block"
-                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-                     data-ad-slot="1234567890"
+                     data-ad-client="ca-pub-1866633787679432"
+                     data-ad-slot="8088747076"
                      data-ad-format="auto"
                      data-full-width-responsive="true"></ins>
                 <script>
@@ -486,13 +534,13 @@
         <!-- Inline Content Ad -->
         <div class="mb-8">
             <div class="ad-container">
-                <!-- Display: In-Article Ad -->
+                <!-- Display: In-Article Ad (Your Slot ID: 7107672043) -->
                 <ins class="adsbygoogle"
                      style="display:block; text-align:center;"
                      data-ad-layout="in-article"
                      data-ad-format="fluid"
-                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-                     data-ad-slot="0987654321"></ins>
+                     data-ad-client="ca-pub-1866633787679432"
+                     data-ad-slot="7107672043"></ins>
                 <script>
                     (adsbygoogle = window.adsbygoogle || []).push({});
                 </script>
@@ -536,6 +584,22 @@
             </div>
         </section>
         
+        <!-- Mobile Banner Ad (Hidden on Desktop) -->
+        <div class="mb-8 md:hidden">
+            <div class="ad-container">
+                <!-- Display: Mobile Banner Ad (Your Slot ID: 6324255179) -->
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-1866633787679432"
+                     data-ad-slot="6324255179"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+            </div>
+        </div>
+        
         <!-- Footer -->
         <footer class="text-center opacity-70 text-sm py-6">
             <div class="mb-4">
@@ -555,13 +619,14 @@
             </div>
             <div class="mt-6 text-xs opacity-50">
                 <p>© 2024 SkyCast Weather. All weather data from Open-Meteo.</p>
+                <p class="mt-1">Supported by Google AdSense</p>
             </div>
         </footer>
     </div>
     
     <!-- JavaScript -->
     <script>
-        // SkyCast Weather PWA - Complete Fixed Version
+        // SkyCast Weather PWA - Complete Version with AdSense Integration
         document.addEventListener('DOMContentLoaded', () => {
             // App Configuration
             const config = {
@@ -579,7 +644,14 @@
                 isPWA: window.matchMedia('(display-mode: standalone)').matches || 
                        window.navigator.standalone || 
                        document.referrer.includes('android-app://'),
-                useMetric: true
+                useMetric: true,
+                // AdSense Configuration - YOUR ACTUAL IDs
+                adSenseConfig: {
+                    clientId: 'ca-pub-1866633787679432',
+                    topBannerSlot: '8088747076',
+                    mobileBannerSlot: '6324255179',
+                    contentAdSlot: '7107672043'
+                }
             };
             
             // DOM Elements
@@ -624,7 +696,8 @@
                 isDarkMode: true,
                 useGeolocation: true,
                 userLocation: null,
-                currentTemperature: null
+                currentTemperature: null,
+                adsInitialized: false
             };
             
             // Weather Code to Description Mapping (Open-Meteo)
@@ -680,7 +753,7 @@
             function initApp() {
                 setupEventListeners();
                 setupPWA();
-                setupAds();
+                setupAdSense();
                 loadPreferences();
                 detectLocation();
             }
@@ -708,6 +781,8 @@
                 window.addEventListener('online', () => {
                     showToast('Back online. Updating weather...');
                     refreshWeather();
+                    // Refresh ads when back online
+                    refreshAds();
                 });
                 
                 window.addEventListener('offline', () => {
@@ -734,21 +809,121 @@
                 }
             }
             
-            // Set up Google AdSense
-            function setupAds() {
-                // Ads are already included in the HTML
-                // Additional ad logic can be added here
-                console.log('AdSense initialized');
+            // Set up Google AdSense with enhanced functionality
+            function setupAdSense() {
+                console.log('Initializing AdSense with your IDs...');
+                console.log('Client ID:', config.adSenseConfig.clientId);
+                console.log('Top Banner Slot:', config.adSenseConfig.topBannerSlot);
+                console.log('Mobile Banner Slot:', config.adSenseConfig.mobileBannerSlot);
+                console.log('Content Ad Slot:', config.adSenseConfig.contentAdSlot);
                 
-                // Initialize ads after a short delay to ensure DOM is ready
+                // Check if AdSense script is loaded
+                if (window.adsbygoogle) {
+                    initializeAds();
+                } else {
+                    // Wait for script to load
+                    const checkAdSense = setInterval(() => {
+                        if (window.adsbygoogle) {
+                            clearInterval(checkAdSense);
+                            initializeAds();
+                        }
+                    }, 100);
+                    
+                    // Fallback after 5 seconds
+                    setTimeout(() => {
+                        if (!appState.adsInitialized) {
+                            clearInterval(checkAdSense);
+                            console.log('AdSense script not loaded, showing placeholders');
+                            showAdPlaceholders();
+                        }
+                    }, 5000);
+                }
+            }
+            
+            function initializeAds() {
+                try {
+                    // Push all ads
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                    appState.adsInitialized = true;
+                    
+                    // Monitor ad loading
+                    monitorAds();
+                    
+                    console.log('AdSense initialized successfully');
+                    
+                } catch (error) {
+                    console.error('AdSense initialization error:', error);
+                    showAdPlaceholders();
+                }
+            }
+            
+            function monitorAds() {
                 setTimeout(() => {
-                    try {
-                        // Re-push ads to ensure they load
-                        (adsbygoogle = window.adsbygoogle || []).push({});
-                    } catch (e) {
-                        console.log('AdSense error:', e);
+                    const ads = document.querySelectorAll('.adsbygoogle');
+                    let loadedCount = 0;
+                    
+                    ads.forEach((ad, index) => {
+                        if (ad.getAttribute('data-adsbygoogle-status') === 'done') {
+                            loadedCount++;
+                            console.log(`Ad ${index + 1} loaded successfully`);
+                        } else {
+                            console.log(`Ad ${index + 1} still loading...`);
+                            // Try to reload failed ads
+                            (adsbygoogle = window.adsbygoogle || []).push({});
+                        }
+                    });
+                    
+                    console.log(`${loadedCount}/${ads.length} ads loaded`);
+                    
+                    if (loadedCount === 0) {
+                        showAdPlaceholders();
                     }
-                }, 1000);
+                    
+                }, 3000);
+            }
+            
+            function refreshAds() {
+                if (!appState.adsInitialized) return;
+                
+                try {
+                    console.log('Refreshing ads...');
+                    // Destroy existing ads
+                    const ads = document.querySelectorAll('.adsbygoogle');
+                    ads.forEach(ad => {
+                        if (ad.innerHTML) {
+                            ad.innerHTML = '';
+                        }
+                    });
+                    
+                    // Re-initialize ads
+                    setTimeout(() => {
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                    }, 1000);
+                    
+                } catch (error) {
+                    console.log('Error refreshing ads:', error);
+                }
+            }
+            
+            function showAdPlaceholders() {
+                const adContainers = document.querySelectorAll('.ad-container');
+                
+                adContainers.forEach(container => {
+                    if (!container.querySelector('.ad-placeholder') && !container.querySelector('ins[data-ad-status="filled"]')) {
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'ad-placeholder text-center text-gray-300 p-4';
+                        placeholder.innerHTML = `
+                            <div class="mb-2">
+                                <i class="fas fa-ad text-2xl text-yellow-400"></i>
+                                <i class="fas fa-ad text-2xl text-blue-400 mx-2"></i>
+                                <i class="fas fa-ad text-2xl text-green-400"></i>
+                            </div>
+                            <p class="text-sm mb-2">SkyCast is supported by ads</p>
+                            <p class="text-xs opacity-70">Ad loading...</p>
+                        `;
+                        container.appendChild(placeholder);
+                    }
+                });
             }
             
             // Load user preferences from localStorage
@@ -1723,6 +1898,7 @@
                 alert('Settings\n\n• Temperature Unit: ' + (appState.isCelsius ? 'Celsius' : 'Fahrenheit') + 
                       '\n• Theme: ' + (appState.isDarkMode ? 'Dark' : 'Light') +
                       '\n• Location: ' + (appState.useGeolocation ? 'GPS Enabled' : 'IP-based') +
+                      '\n• Ad Settings: Manage in browser settings' +
                       '\n\nTo change settings, use the buttons in the app.');
             }
             
