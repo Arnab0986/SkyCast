@@ -1,21 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SkyCast – Weather Intelligence</title>
-<meta name="description" content="AI-powered weather, radar, forecasts & alerts">
 
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="/icons/favicon-32.png">
-<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <!-- Google AdSense -->
 <script async
@@ -23,98 +17,192 @@
   crossorigin="anonymous"></script>
 
 <style>
-body {
+/* ================= BASE ================= */
+body{
   font-family: Inter, system-ui;
-  background: linear-gradient(135deg,#0f172a,#1e293b);
-  color: white;
+  color:#fff;
+  min-height:100vh;
+  overflow-x:hidden;
+  transition:background 1s ease;
 }
-.glass {
-  background: rgba(255,255,255,0.08);
-  backdrop-filter: blur(14px);
-  border-radius: 1.25rem;
-  border: 1px solid rgba(255,255,255,0.15);
+
+/* ================= WEATHER BACKGROUNDS ================= */
+.bg-day{
+  background:radial-gradient(circle at top,#7dd3fc,#0ea5e9,#020617);
 }
-#map { height: 320px; border-radius: 1rem; }
-#weatherCanvas {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
+.bg-night{
+  background:radial-gradient(circle at top,#1e293b,#020617);
+}
+.bg-rain{
+  background:linear-gradient(#0f172a,#020617);
+}
+.bg-storm{
+  background:radial-gradient(circle at top,#312e81,#020617);
+}
+.bg-snow{
+  background:linear-gradient(#e5f3ff,#64748b,#020617);
+}
+
+/* ================= CLOUD LAYER ================= */
+.clouds::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:url("https://www.transparenttextures.com/patterns/clouds.png");
+  opacity:.25;
+  animation:cloudMove 120s linear infinite;
+  pointer-events:none;
+}
+@keyframes cloudMove{
+  from{background-position:0 0}
+  to{background-position:10000px 0}
+}
+
+/* ================= RAIN ================= */
+.rain::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:url("https://www.transparenttextures.com/patterns/stardust.png");
+  animation:rainMove .4s linear infinite;
+  opacity:.18;
+}
+@keyframes rainMove{
+  from{background-position:0 0}
+  to{background-position:0 1200px}
+}
+
+/* ================= SNOW ================= */
+.snow::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:url("https://www.transparenttextures.com/patterns/snow.png");
+  animation:snowMove 12s linear infinite;
+  opacity:.35;
+}
+@keyframes snowMove{
+  from{background-position:0 0}
+  to{background-position:600px 1200px}
+}
+
+/* ================= LIGHTNING ================= */
+.flash{
+  animation:flash 6s infinite;
+}
+@keyframes flash{
+  0%,95%,100%{background-color:transparent}
+  96%,98%{background-color:rgba(255,255,255,.25)}
+}
+
+/* ================= UI ================= */
+.glass{
+  background:rgba(255,255,255,.12);
+  backdrop-filter:blur(14px);
+  border-radius:1.5rem;
+  border:1px solid rgba(255,255,255,.2);
+}
+
+/* ================= WIND COMPASS ================= */
+.compass{
+  width:70px;
+  height:70px;
+  border:2px solid rgba(255,255,255,.4);
+  border-radius:50%;
+  position:relative;
+  margin:auto;
+}
+.compass::after{
+  content:"N";
+  position:absolute;
+  top:-18px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:.75rem;
+  opacity:.7;
+}
+.arrow{
+  width:2px;
+  height:28px;
+  background:#38bdf8;
+  position:absolute;
+  top:8px;
+  left:50%;
+  transform-origin:bottom center;
+  transform:translateX(-50%) rotate(0deg);
 }
 </style>
 </head>
 
-<body class="p-4 md:p-8">
-<canvas id="weatherCanvas"></canvas>
+<body class="bg-night clouds">
 
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="max-w-6xl mx-auto p-6 space-y-6">
 
 <header class="flex justify-between items-center">
-<h1 class="text-2xl font-bold flex items-center gap-2">
-<i data-lucide="cloud-sun"></i> SkyCast
-</h1>
-<div class="flex gap-2">
-<input id="cityInput" placeholder="Add city" class="glass px-3 py-2">
-<button id="addBtn" class="glass px-3 py-2">+</button>
-</div>
+  <h1 class="text-2xl font-bold flex items-center gap-2">
+    <i data-lucide="cloud-sun"></i> SkyCast
+  </h1>
 </header>
 
-<!-- ADS -->
-<div id="webHeaderAd" class="glass p-3 text-center hidden">
-<ins class="adsbygoogle" style="display:block"
-data-ad-client="ca-pub-XXXXXXXXXXXX"
-data-ad-slot="1111111111" data-ad-format="auto"></ins>
+<!-- TOP WEBSITE AD -->
+<div class="glass p-3 text-center">
+  <ins class="adsbygoogle"
+    style="display:block"
+    data-ad-client="ca-pub-XXXXXXXXXXXX"
+    data-ad-slot="1111111111"
+    data-ad-format="auto"></ins>
 </div>
-
-<div id="cityTabs" class="flex gap-2 overflow-x-auto"></div>
 
 <!-- HERO -->
 <div class="glass p-8 grid md:grid-cols-2 gap-6">
-<div>
-<h2 id="cityName">Detecting location…</h2>
-<p id="temp" class="text-6xl font-bold">--°</p>
-<p id="desc" class="text-blue-300"></p>
-<p id="localTime" class="text-sm text-gray-400"></p>
+  <div>
+    <p id="city" class="text-lg opacity-80">Detecting location…</p>
+    <p id="temp" class="text-7xl font-bold">--°</p>
+    <p id="desc" class="text-blue-200 text-lg"></p>
+    <p id="time" class="text-sm opacity-60 mt-1"></p>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div class="glass p-4">💧 Humidity <p id="humidity" class="text-xl font-bold">--%</p></div>
+    <div class="glass p-4">🌬 Wind
+      <div class="compass mt-2">
+        <div id="windArrow" class="arrow"></div>
+      </div>
+      <p id="wind" class="text-sm mt-1"></p>
+    </div>
+    <div class="glass p-4">☀ UV <p id="uv" class="text-xl font-bold">--</p></div>
+    <div class="glass p-4">🫁 PM2.5 <p id="aqi" class="text-xl font-bold">--</p></div>
+  </div>
 </div>
 
-<div class="grid grid-cols-2 gap-4">
-<div class="glass p-3">💧 Humidity <p id="humidity">--%</p></div>
-<div class="glass p-3">🌬 Wind <p id="wind">-- km/h</p><p id="windDir"></p></div>
-<div class="glass p-3">☀ UV <p id="uv">--</p></div>
-<div class="glass p-3">🫁 PM2.5 <p id="aqi">--</p></div>
-</div>
-</div>
-
-<div class="grid lg:grid-cols-2 gap-6">
+<!-- AI -->
 <div class="glass p-6">
-<h3>AI Forecast</h3>
-<p id="aiText">Generating…</p>
-</div>
-<div class="glass p-6">
-<h3>Health Advisory</h3>
-<p id="healthAdvice">Analyzing…</p>
-<button id="voiceBtn">🔊 Read</button>
-</div>
+  <h3 class="font-semibold mb-2">AI Forecast</h3>
+  <p id="ai">Generating…</p>
 </div>
 
 <!-- HOURLY -->
-<div class="glass p-4">
-<h3>Hourly Forecast</h3>
-<div id="hourlyStrip" class="flex gap-4 overflow-x-auto"></div>
+<div class="glass p-6">
+  <h3 class="font-semibold mb-2">Hourly Forecast</h3>
+  <div id="hourly" class="flex gap-3 overflow-x-auto"></div>
+</div>
+
+<!-- INLINE AD -->
+<div class="glass p-4 text-center">
+  <ins class="adsbygoogle"
+    style="display:block"
+    data-ad-client="ca-pub-XXXXXXXXXXXX"
+    data-ad-slot="2222222222"
+    data-ad-format="rectangle"></ins>
 </div>
 
 <!-- DAILY -->
-<div class="glass p-4">
-<h3>7-Day Forecast</h3>
-<div id="daily"></div>
+<div class="glass p-6">
+  <h3 class="font-semibold mb-2">7-Day Forecast</h3>
+  <div id="daily" class="space-y-2"></div>
 </div>
 
-<div class="glass p-4">
-<h3>Live Radar</h3>
-<div id="map"></div>
-</div>
-
-<footer class="text-center text-xs text-gray-500 pt-8">
+<footer class="text-center text-xs opacity-50 pt-8">
 © 2025 SkyCast Weather Intelligence
 </footer>
 
@@ -123,132 +211,101 @@ data-ad-slot="1111111111" data-ad-format="auto"></ins>
 <script>
 lucide.createIcons();
 const $=id=>document.getElementById(id);
-let map,marker;
-
-/* MAP */
-function initMap(){
-map=L.map("map").setView([20,77],5);
-L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png").addTo(map);
-}
 
 /* LOCATION */
-function detectLocation(){
-return new Promise(r=>{
 navigator.geolocation.getCurrentPosition(
-p=>r({city:"Your Location",lat:p.coords.latitude,lon:p.coords.longitude}),
-()=>r({city:"New Delhi",lat:28.61,lon:77.2})
+p=>loadWeather(p.coords.latitude,p.coords.longitude,"Your Location"),
+()=>loadWeather(28.61,77.2,"New Delhi")
 );
-});
-}
 
-/* AIR QUALITY (FIXED) */
-async function loadAir(lat,lon){
-try{
-const a=await fetch(
-`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5`
-).then(r=>r.json());
-const pm=Math.round(a.hourly.pm2_5[0]);
-aqi.textContent=pm;
-return pm;
-}catch{aqi.textContent="--";return 0;}
-}
-
-/* WEATHER (FIXED) */
+/* WEATHER */
 async function loadWeather(lat,lon,city){
-cityName.textContent=city;
+$("city").textContent=city;
 
 const w=await fetch(
 `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}
-&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,is_day
-&hourly=time,temperature_2m,weather_code
+&current=temperature_2m,relative_humidity_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m
+&hourly=time,temperature_2m
 &daily=time,temperature_2m_max,temperature_2m_min,uv_index_max
 &timezone=auto`
 ).then(r=>r.json());
 
-temp.textContent=Math.round(w.current.temperature_2m)+"°";
-desc.textContent=descText(w.current.weather_code);
-humidity.textContent=w.current.relative_humidity_2m+"%";
-wind.textContent=w.current.wind_speed_10m+" km/h";
-windDir.textContent=windDirText(w.current.wind_direction_10m);
-uv.textContent=w.daily.uv_index_max[0];
-localTime.textContent=new Date().toLocaleTimeString();
+$("temp").textContent=Math.round(w.current.temperature_2m)+"°";
+$("desc").textContent(desc(w.current.weather_code));
+$("humidity").textContent=w.current.relative_humidity_2m+"%";
+$("wind").textContent=w.current.wind_speed_10m+" km/h";
+$("uv").textContent=w.daily.uv_index_max[0];
+$("time").textContent=new Date().toLocaleTimeString();
+
+rotateCompass(w.current.wind_direction_10m);
+setBackground(w.current.weather_code,w.current.is_day);
 
 renderHourly(w);
 renderDaily(w);
-updateMap(lat,lon);
-applyCanvasWeather(w.current.weather_code);
-generateAI(w,city);
-
-const pm=await loadAir(lat,lon);
-generateHealth(w,pm);
+loadAir(lat,lon);
+generateAI(city,w.current.temperature_2m,desc(w.current.weather_code));
 }
 
-/* UI RENDER */
+/* AIR QUALITY */
+async function loadAir(lat,lon){
+const a=await fetch(
+`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5`
+).then(r=>r.json());
+$("aqi").textContent=Math.round(a.hourly.pm2_5[0]);
+}
+
+/* UI */
 function renderHourly(w){
-hourlyStrip.innerHTML="";
+hourly.innerHTML="";
 for(let i=0;i<24;i++){
-const h=new Date(w.hourly.time[i]).getHours();
-hourlyStrip.innerHTML+=`<div class="glass p-3">${h}:00<br>${Math.round(w.hourly.temperature_2m[i])}°</div>`;
-}
-}
-
+hourly.innerHTML+=`
+<div class="glass p-3 min-w-[80px] text-center">
+${new Date(w.hourly.time[i]).getHours()}:00<br>
+<b>${Math.round(w.hourly.temperature_2m[i])}°</b>
+</div>`;
+}}
 function renderDaily(w){
 daily.innerHTML="";
 for(let i=0;i<7;i++){
-const d=new Date(w.daily.time[i]).toLocaleDateString(undefined,{weekday:"short"});
-daily.innerHTML+=`<div class="glass p-2 flex justify-between"><span>${d}</span><span>${Math.round(w.daily.temperature_2m_max[i])}° / ${Math.round(w.daily.temperature_2m_min[i])}°</span></div>`;
-}
+daily.innerHTML+=`
+<div class="glass p-3 flex justify-between">
+${new Date(w.daily.time[i]).toLocaleDateString(undefined,{weekday:"short"})}
+<span>${Math.round(w.daily.temperature_2m_max[i])}° / ${Math.round(w.daily.temperature_2m_min[i])}°</span>
+</div>`;
+}}
+
+/* BACKGROUND */
+function setBackground(code,isDay){
+document.body.className="";
+if(code>=95)document.body.classList.add("bg-storm","rain","flash","clouds");
+else if(code>=71)document.body.classList.add("bg-snow","snow","clouds");
+else if(code>=61)document.body.classList.add("bg-rain","rain","clouds");
+else if(isDay)document.body.classList.add("bg-day","clouds");
+else document.body.classList.add("bg-night","clouds");
 }
 
-/* AI */
-async function generateAI(w,city){
-try{
-const r=await fetch("/api/ai-forecast",{method:"POST",headers:{"Content-Type":"application/json"},
-body:JSON.stringify({city,temp:w.current.temperature_2m,code:descText(w.current.weather_code)})});
-const d=await r.json();
-aiText.textContent=d.text;
-}catch{aiText.textContent="AI unavailable";}
+/* WIND COMPASS */
+function rotateCompass(deg){
+$("windArrow").style.transform=`translateX(-50%) rotate(${deg}deg)`;
 }
-
-/* HEALTH */
-function generateHealth(w,pm){
-let t=[];
-if(pm>60)t.push("High pollution. Avoid outdoor activity.");
-if(w.daily.uv_index_max[0]>7)t.push("High UV. Use sunscreen.");
-healthAdvice.textContent=t.join(" ")||"Conditions are safe.";
-}
-voiceBtn.onclick=()=>speechSynthesis.speak(new SpeechSynthesisUtterance(healthAdvice.textContent));
 
 /* HELPERS */
-function descText(c){return{0:"Clear",1:"Partly Cloudy",2:"Cloudy",61:"Rain",71:"Snow",95:"Thunderstorm"}[c]||"Weather";}
-function windDirText(d){return["N","NE","E","SE","S","SW","W","NW"][Math.round(d/45)%8];}
+function desc(c){return{0:"Clear",1:"Partly Cloudy",2:"Cloudy",61:"Rain",71:"Snow",95:"Thunderstorm"}[c]||"Weather";}
 
-/* CANVAS */
-const canvas=$("weatherCanvas"),ctx=canvas.getContext("2d");
-function resize(){canvas.width=innerWidth;canvas.height=innerHeight}
-resize();addEventListener("resize",resize);
-let particles=[],mode="clear";
-function applyCanvasWeather(c){
-mode=c<=3?"cloud":c<=67?"rain":c<=77?"snow":"clear";
-particles=[...Array(120)].map(()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,s:Math.random()*2+1}));
+/* AI */
+async function generateAI(city,temp,code){
+try{
+const r=await fetch("/api/ai-forecast",{method:"POST",headers:{"Content-Type":"application/json"},
+body:JSON.stringify({city,temp,code})});
+const d=await r.json();
+$("ai").textContent=d.text;
+}catch{$("ai").textContent="AI unavailable";}
 }
-(function anim(){
-ctx.clearRect(0,0,canvas.width,canvas.height);
-particles.forEach(p=>{
-ctx.fillStyle="rgba(255,255,255,.7)";
-if(mode==="rain"){ctx.fillRect(p.x,p.y,2,10);p.y+=p.s*4;}
-if(mode==="snow"){ctx.beginPath();ctx.arc(p.x,p.y,2,0,6.28);ctx.fill();p.y+=p.s;}
-if(p.y>canvas.height)p.y=0;
-});
-requestAnimationFrame(anim);
-})();
 
-/* INIT */
-(async()=>{
-initMap();
-const loc=await detectLocation();
-loadWeather(loc.lat,loc.lon,loc.city);
-})();
+/* ADS */
+(adsbygoogle=window.adsbygoogle||[]).push({});
+(adsbygoogle=window.adsbygoogle||[]).push({});
 </script>
+
 </body>
 </html>
