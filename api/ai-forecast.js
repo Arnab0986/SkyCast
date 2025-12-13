@@ -1,47 +1,79 @@
+// /api/ai-forecast.js
 export default async function handler(req, res) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  // Handle OPTIONS request for CORS
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  // Only accept GET requests
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  
   try {
-    if (req.method !== "POST") {
-      return res.status(405).json({ text: "Method not allowed" });
-    }
-
-    const { city, temp, code } = req.body || {};
-    if (!city || temp === undefined || !code) {
-      return res.status(200).json({
-        text: "Weather data insufficient for AI forecast."
+    const { city, temperature, condition } = req.query;
+    
+    // Validate required parameters
+    if (!city || !temperature || !condition) {
+      return res.status(400).json({ 
+        error: 'Missing required parameters: city, temperature, condition' 
       });
     }
-
-    const prompt = `
-You are a professional meteorologist.
-City: ${city}
-Temperature: ${temp}°C
-Condition: ${code}
-
-Give a short, helpful weather forecast with practical advice.
-`;
-
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.4
-      })
-    });
-
-    const d = await r.json();
-    const text =
-      d?.choices?.[0]?.message?.content ||
-      "AI forecast unavailable at the moment.";
-
-    res.status(200).json({ text });
-  } catch (e) {
-    res.status(200).json({
-      text: "AI forecast unavailable offline."
+    
+    // In production, you would call OpenAI API here
+    // For this demo, we'll generate a simple AI response
+    
+    const temp = parseFloat(temperature);
+    let forecast = '';
+    let advice = '';
+    
+    // Generate forecast based on temperature
+    if (temp > 30) {
+      forecast = `It's quite warm in ${city} with ${condition}. `;
+      advice = 'Stay hydrated and avoid direct sun during peak hours. ';
+    } else if (temp > 20) {
+      forecast = `Enjoy pleasant weather in ${city} with ${condition}. `;
+      advice = 'Perfect conditions for outdoor activities. ';
+    } else if (temp > 10) {
+      forecast = `It's cool in ${city} with ${condition}. `;
+      advice = 'A light jacket would be comfortable. ';
+    } else {
+      forecast = `It's cold in ${city} with ${condition}. `;
+      advice = 'Dress warmly and limit time outdoors. ';
+    }
+    
+    // Add condition-specific advice
+    if (condition.includes('rain')) {
+      advice += 'Carry an umbrella or raincoat. ';
+    } else if (condition.includes('snow')) {
+      advice += 'Drive carefully if traveling. ';
+    } else if (condition.includes('storm')) {
+      advice += 'Seek shelter if outdoors. ';
+    }
+    
+    // Combine into AI response
+    const aiResponse = {
+      forecast: forecast.trim(),
+      advice: advice.trim(),
+      generatedAt: new Date().toISOString(),
+      model: 'gpt-4-mini-simulated'
+    };
+    
+    // Cache control headers
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    
+    return res.status(200).json(aiResponse);
+    
+  } catch (error) {
+    console.error('AI Forecast API error:', error);
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      fallback: 'Weather conditions are normal for this time of year.'
     });
   }
 }

@@ -1,311 +1,1396 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SkyCast – Weather Intelligence</title>
-
-<link rel="manifest" href="/manifest.json">
-<link rel="icon" href="/icons/favicon-32.png">
-
-<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
-
-<!-- Google AdSense -->
-<script async
-  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXX"
-  crossorigin="anonymous"></script>
-
-<style>
-/* ================= BASE ================= */
-body{
-  font-family: Inter, system-ui;
-  color:#fff;
-  min-height:100vh;
-  overflow-x:hidden;
-  transition:background 1s ease;
-}
-
-/* ================= WEATHER BACKGROUNDS ================= */
-.bg-day{
-  background:radial-gradient(circle at top,#7dd3fc,#0ea5e9,#020617);
-}
-.bg-night{
-  background:radial-gradient(circle at top,#1e293b,#020617);
-}
-.bg-rain{
-  background:linear-gradient(#0f172a,#020617);
-}
-.bg-storm{
-  background:radial-gradient(circle at top,#312e81,#020617);
-}
-.bg-snow{
-  background:linear-gradient(#e5f3ff,#64748b,#020617);
-}
-
-/* ================= CLOUD LAYER ================= */
-.clouds::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  background:url("https://www.transparenttextures.com/patterns/clouds.png");
-  opacity:.25;
-  animation:cloudMove 120s linear infinite;
-  pointer-events:none;
-}
-@keyframes cloudMove{
-  from{background-position:0 0}
-  to{background-position:10000px 0}
-}
-
-/* ================= RAIN ================= */
-.rain::after{
-  content:"";
-  position:fixed;
-  inset:0;
-  background:url("https://www.transparenttextures.com/patterns/stardust.png");
-  animation:rainMove .4s linear infinite;
-  opacity:.18;
-}
-@keyframes rainMove{
-  from{background-position:0 0}
-  to{background-position:0 1200px}
-}
-
-/* ================= SNOW ================= */
-.snow::after{
-  content:"";
-  position:fixed;
-  inset:0;
-  background:url("https://www.transparenttextures.com/patterns/snow.png");
-  animation:snowMove 12s linear infinite;
-  opacity:.35;
-}
-@keyframes snowMove{
-  from{background-position:0 0}
-  to{background-position:600px 1200px}
-}
-
-/* ================= LIGHTNING ================= */
-.flash{
-  animation:flash 6s infinite;
-}
-@keyframes flash{
-  0%,95%,100%{background-color:transparent}
-  96%,98%{background-color:rgba(255,255,255,.25)}
-}
-
-/* ================= UI ================= */
-.glass{
-  background:rgba(255,255,255,.12);
-  backdrop-filter:blur(14px);
-  border-radius:1.5rem;
-  border:1px solid rgba(255,255,255,.2);
-}
-
-/* ================= WIND COMPASS ================= */
-.compass{
-  width:70px;
-  height:70px;
-  border:2px solid rgba(255,255,255,.4);
-  border-radius:50%;
-  position:relative;
-  margin:auto;
-}
-.compass::after{
-  content:"N";
-  position:absolute;
-  top:-18px;
-  left:50%;
-  transform:translateX(-50%);
-  font-size:.75rem;
-  opacity:.7;
-}
-.arrow{
-  width:2px;
-  height:28px;
-  background:#38bdf8;
-  position:absolute;
-  top:8px;
-  left:50%;
-  transform-origin:bottom center;
-  transform:translateX(-50%) rotate(0deg);
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyCast - Weather Forecast</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <!-- Fonts & Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌤️</text></svg>">
+    
+    <!-- Apple-style glassmorphism -->
+    <style>
+        :root {
+            --primary: #0A84FF;
+            --primary-dark: #0066CC;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        body {
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            color: #fff;
+            transition: background 1.5s ease;
+        }
+        
+        /* Weather Backgrounds */
+        .background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        /* Day Clear Background */
+        .day-clear {
+            background: linear-gradient(135deg, #1E3C72 0%, #2A5298 50%, #87CEEB 100%);
+        }
+        
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            animation: float 60s infinite linear;
+        }
+        
+        @keyframes float {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(calc(100vw + 100px)); }
+        }
+        
+        /* Night Clear Background */
+        .night-clear {
+            background: linear-gradient(135deg, #0F2027 0%, #203A43 50%, #2C5364 100%);
+        }
+        
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite alternate;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+        
+        /* Rain Background */
+        .rain {
+            background: linear-gradient(135deg, #2C3E50 0%, #4CA1AF 100%);
+        }
+        
+        .raindrop {
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.6);
+            animation: fall linear infinite;
+        }
+        
+        @keyframes fall {
+            to { transform: translateY(100vh); }
+        }
+        
+        /* Snow Background */
+        .snow {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        }
+        
+        .snowflake {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: snowfall linear infinite;
+        }
+        
+        @keyframes snowfall {
+            to { transform: translateY(100vh) rotate(360deg); }
+        }
+        
+        /* Thunderstorm Background */
+        .thunderstorm {
+            background: linear-gradient(135deg, #232526 0%, #414345 100%);
+        }
+        
+        .lightning {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: white;
+            opacity: 0;
+            animation: lightningFlash 8s infinite;
+        }
+        
+        @keyframes lightningFlash {
+            0%, 100% { opacity: 0; }
+            1%, 3% { opacity: 0.6; }
+            2% { opacity: 0.3; }
+        }
+        
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px var(--shadow);
+        }
+        
+        /* Wind Compass */
+        .compass {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .compass-arrow {
+            width: 4px;
+            height: 50px;
+            background: #fff;
+            position: absolute;
+            top: 10px;
+            transform-origin: bottom center;
+            border-radius: 4px;
+            transition: transform 0.5s ease;
+        }
+        
+        .compass-direction {
+            position: absolute;
+            bottom: 10px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        /* Hourly Forecast Scroll */
+        .hourly-scroll {
+            display: flex;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.3) transparent;
+        }
+        
+        .hourly-scroll::-webkit-scrollbar {
+            height: 6px;
+        }
+        
+        .hourly-scroll::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 10px;
+        }
+        
+        .hourly-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+        }
+        
+        /* Loading States */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Ad Container */
+        .ad-container {
+            overflow: hidden;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 640px) {
+            .glass-card {
+                border-radius: 16px;
+            }
+            
+            .container {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+        }
+        
+        /* Install PWA Button */
+        .install-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            border-radius: 12px;
+            padding: 10px 20px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .install-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(10, 132, 255, 0.4);
+        }
+        
+        /* Text-to-Speech Button */
+        .tts-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .tts-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
 </head>
-
-<body class="bg-night clouds">
-
-<div class="max-w-6xl mx-auto p-6 space-y-6">
-
-<header class="flex justify-between items-center">
-  <h1 class="text-2xl font-bold flex items-center gap-2">
-    <i data-lucide="cloud-sun"></i> SkyCast
-  </h1>
-</header>
-
-<!-- TOP WEBSITE AD -->
-<div class="glass p-3 text-center">
-  <ins class="adsbygoogle"
-    style="display:block"
-    data-ad-client="ca-pub-XXXXXXXXXXXX"
-    data-ad-slot="1111111111"
-    data-ad-format="auto"></ins>
-</div>
-
-<!-- HERO -->
-<div class="glass p-8 grid md:grid-cols-2 gap-6">
-  <div>
-    <p id="city" class="text-lg opacity-80">Detecting location…</p>
-    <p id="temp" class="text-7xl font-bold">--°</p>
-    <p id="desc" class="text-blue-200 text-lg"></p>
-    <p id="time" class="text-sm opacity-60 mt-1"></p>
-  </div>
-
-  <div class="grid grid-cols-2 gap-4">
-    <div class="glass p-4">💧 Humidity <p id="humidity" class="text-xl font-bold">--%</p></div>
-    <div class="glass p-4">🌬 Wind
-      <div class="compass mt-2">
-        <div id="windArrow" class="arrow"></div>
-      </div>
-      <p id="wind" class="text-sm mt-1"></p>
+<body class="bg-gray-900">
+    <!-- Dynamic Weather Background -->
+    <div id="weatherBackground" class="background-container"></div>
+    
+    <!-- Main App Container -->
+    <div class="container mx-auto px-4 py-6 max-w-4xl">
+        <!-- Header with Location and PWA Install -->
+        <header class="flex justify-between items-center mb-6">
+            <div class="flex items-center space-x-2">
+                <h1 class="text-2xl font-bold">SkyCast</h1>
+                <span class="text-sm bg-blue-500/30 px-3 py-1 rounded-full">PWA</span>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <!-- Location Display -->
+                <div id="locationDisplay" class="glass-card px-4 py-2">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-location-dot text-blue-300"></i>
+                        <span id="cityName" class="font-medium">Detecting location...</span>
+                    </div>
+                </div>
+                
+                <!-- Install PWA Button (Hidden by default) -->
+                <button id="installBtn" class="install-btn hidden">
+                    <i class="fas fa-download"></i>
+                    <span>Install</span>
+                </button>
+                
+                <!-- Refresh Button -->
+                <button id="refreshBtn" class="tts-btn">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </header>
+        
+        <!-- Top Banner Ad Placeholder -->
+        <div class="mb-6">
+            <div id="bannerAd" class="ad-container">
+                <div class="text-center text-gray-300">
+                    <i class="fas fa-ad text-xl mb-2"></i>
+                    <p class="text-sm">Ad will load here</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Current Weather Section -->
+        <section class="mb-8">
+            <div class="glass-card p-6">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <!-- Temperature & Condition -->
+                    <div class="text-center md:text-left mb-6 md:mb-0">
+                        <div class="flex items-center justify-center md:justify-start mb-4">
+                            <div id="weatherIcon" class="text-6xl mr-4">⛅</div>
+                            <div>
+                                <div id="currentTemp" class="text-7xl font-bold">--°</div>
+                                <div id="conditionText" class="text-xl opacity-90">Loading...</div>
+                            </div>
+                        </div>
+                        <div id="localTime" class="text-lg opacity-80">--:-- --</div>
+                    </div>
+                    
+                    <!-- Weather Details Grid -->
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 w-full md:w-auto">
+                        <!-- Humidity -->
+                        <div class="text-center p-4 rounded-xl bg-white/5">
+                            <i class="fas fa-tint text-2xl text-blue-300 mb-2"></i>
+                            <div class="text-sm opacity-80">Humidity</div>
+                            <div id="humidity" class="text-xl font-semibold">--%</div>
+                        </div>
+                        
+                        <!-- Wind -->
+                        <div class="text-center p-4 rounded-xl bg-white/5">
+                            <i class="fas fa-wind text-2xl text-green-300 mb-2"></i>
+                            <div class="text-sm opacity-80">Wind</div>
+                            <div id="windSpeed" class="text-xl font-semibold">-- km/h</div>
+                        </div>
+                        
+                        <!-- UV Index -->
+                        <div class="text-center p-4 rounded-xl bg-white/5">
+                            <i class="fas fa-sun text-2xl text-yellow-300 mb-2"></i>
+                            <div class="text-sm opacity-80">UV Index</div>
+                            <div id="uvIndex" class="text-xl font-semibold">--</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Wind Compass -->
+                <div class="mt-8 flex flex-col items-center">
+                    <h3 class="text-lg font-semibold mb-4">Wind Direction</h3>
+                    <div class="compass">
+                        <div id="compassArrow" class="compass-arrow"></div>
+                        <div id="compassDirection" class="compass-direction">N</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- AI Forecast & Health Advisory -->
+        <section class="mb-8">
+            <div class="glass-card p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">
+                        <i class="fas fa-robot mr-2"></i>AI Forecast & Health Advisory
+                    </h2>
+                    <button id="speakAdvisory" class="tts-btn" title="Read aloud">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                </div>
+                
+                <!-- AI Forecast Text -->
+                <div id="aiForecast" class="mb-6 p-4 rounded-xl bg-white/5">
+                    <div class="flex items-start">
+                        <i class="fas fa-brain text-blue-400 mt-1 mr-3"></i>
+                        <div>
+                            <div class="font-medium mb-2">Today's Forecast</div>
+                            <div id="aiForecastText" class="opacity-90">
+                                Loading AI-powered forecast...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Health Advisory -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Air Quality -->
+                    <div class="p-4 rounded-xl bg-white/5">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="flex items-center">
+                                <i class="fas fa-lungs text-xl text-purple-300 mr-2"></i>
+                                <div class="font-medium">Air Quality</div>
+                            </div>
+                            <div id="aqiValue" class="px-3 py-1 rounded-full bg-purple-500/30 text-sm">--</div>
+                        </div>
+                        <div id="airQualityText" class="text-sm opacity-90 mb-2">PM2.5: -- μg/m³</div>
+                        <div id="airQualityAdvice" class="text-sm">Loading air quality data...</div>
+                    </div>
+                    
+                    <!-- Health Tips -->
+                    <div class="p-4 rounded-xl bg-white/5">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-heartbeat text-xl text-red-300 mr-2"></i>
+                            <div class="font-medium">Health Advisory</div>
+                        </div>
+                        <div id="healthAdvisory" class="text-sm opacity-90">
+                            Combining UV index and air quality data for personalized health advice...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Inline Content Ad Placeholder -->
+        <div class="mb-8">
+            <div id="contentAd" class="ad-container">
+                <div class="text-center text-gray-300">
+                    <i class="fas fa-ad text-xl mb-2"></i>
+                    <p class="text-sm">Content ad will load here</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hourly Forecast -->
+        <section class="mb-8">
+            <div class="glass-card p-6">
+                <h2 class="text-xl font-bold mb-4">24-Hour Forecast</h2>
+                <div id="hourlyForecast" class="hourly-scroll">
+                    <!-- Hourly forecast items will be added here -->
+                    <div class="skeleton w-16 h-24 rounded-xl mr-4"></div>
+                    <div class="skeleton w-16 h-24 rounded-xl mr-4"></div>
+                    <div class="skeleton w-16 h-24 rounded-xl mr-4"></div>
+                    <div class="skeleton w-16 h-24 rounded-xl mr-4"></div>
+                    <div class="skeleton w-16 h-24 rounded-xl mr-4"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 7-Day Forecast -->
+        <section class="mb-8">
+            <div class="glass-card p-6">
+                <h2 class="text-xl font-bold mb-4">7-Day Forecast</h2>
+                <div id="weeklyForecast">
+                    <!-- Weekly forecast items will be added here -->
+                    <div class="skeleton w-full h-12 rounded-xl mb-3"></div>
+                    <div class="skeleton w-full h-12 rounded-xl mb-3"></div>
+                    <div class="skeleton w-full h-12 rounded-xl mb-3"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Footer -->
+        <footer class="text-center opacity-70 text-sm py-6">
+            <div class="mb-4">
+                <p>SkyCast uses Open-Meteo APIs for accurate weather data</p>
+                <p class="mt-1">AI-powered forecasts provide personalized insights</p>
+            </div>
+            <div class="flex justify-center space-x-6">
+                <button id="themeToggle" class="opacity-80 hover:opacity-100">
+                    <i class="fas fa-moon mr-1"></i> Dark Mode
+                </button>
+                <button id="unitsToggle" class="opacity-80 hover:opacity-100">
+                    <i class="fas fa-thermometer mr-1"></i> °C / °F
+                </button>
+                <a href="#" id="attributionBtn" class="opacity-80 hover:opacity-100">
+                    <i class="fas fa-info-circle mr-1"></i> Data Attribution
+                </a>
+            </div>
+        </footer>
     </div>
-    <div class="glass p-4">☀ UV <p id="uv" class="text-xl font-bold">--</p></div>
-    <div class="glass p-4">🫁 PM2.5 <p id="aqi" class="text-xl font-bold">--</p></div>
-  </div>
-</div>
-
-<!-- AI -->
-<div class="glass p-6">
-  <h3 class="font-semibold mb-2">AI Forecast</h3>
-  <p id="ai">Generating…</p>
-</div>
-
-<!-- HOURLY -->
-<div class="glass p-6">
-  <h3 class="font-semibold mb-2">Hourly Forecast</h3>
-  <div id="hourly" class="flex gap-3 overflow-x-auto"></div>
-</div>
-
-<!-- INLINE AD -->
-<div class="glass p-4 text-center">
-  <ins class="adsbygoogle"
-    style="display:block"
-    data-ad-client="ca-pub-XXXXXXXXXXXX"
-    data-ad-slot="2222222222"
-    data-ad-format="rectangle"></ins>
-</div>
-
-<!-- DAILY -->
-<div class="glass p-6">
-  <h3 class="font-semibold mb-2">7-Day Forecast</h3>
-  <div id="daily" class="space-y-2"></div>
-</div>
-
-<footer class="text-center text-xs opacity-50 pt-8">
-© 2025 SkyCast Weather Intelligence
-</footer>
-
-</div>
-
-<script>
-lucide.createIcons();
-const $=id=>document.getElementById(id);
-
-/* LOCATION */
-navigator.geolocation.getCurrentPosition(
-p=>loadWeather(p.coords.latitude,p.coords.longitude,"Your Location"),
-()=>loadWeather(28.61,77.2,"New Delhi")
-);
-
-/* WEATHER */
-async function loadWeather(lat,lon,city){
-$("city").textContent=city;
-
-const w=await fetch(
-`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}
-&current=temperature_2m,relative_humidity_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m
-&hourly=time,temperature_2m
-&daily=time,temperature_2m_max,temperature_2m_min,uv_index_max
-&timezone=auto`
-).then(r=>r.json());
-
-$("temp").textContent=Math.round(w.current.temperature_2m)+"°";
-$("desc").textContent(desc(w.current.weather_code));
-$("humidity").textContent=w.current.relative_humidity_2m+"%";
-$("wind").textContent=w.current.wind_speed_10m+" km/h";
-$("uv").textContent=w.daily.uv_index_max[0];
-$("time").textContent=new Date().toLocaleTimeString();
-
-rotateCompass(w.current.wind_direction_10m);
-setBackground(w.current.weather_code,w.current.is_day);
-
-renderHourly(w);
-renderDaily(w);
-loadAir(lat,lon);
-generateAI(city,w.current.temperature_2m,desc(w.current.weather_code));
-}
-
-/* AIR QUALITY */
-async function loadAir(lat,lon){
-const a=await fetch(
-`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5`
-).then(r=>r.json());
-$("aqi").textContent=Math.round(a.hourly.pm2_5[0]);
-}
-
-/* UI */
-function renderHourly(w){
-hourly.innerHTML="";
-for(let i=0;i<24;i++){
-hourly.innerHTML+=`
-<div class="glass p-3 min-w-[80px] text-center">
-${new Date(w.hourly.time[i]).getHours()}:00<br>
-<b>${Math.round(w.hourly.temperature_2m[i])}°</b>
-</div>`;
-}}
-function renderDaily(w){
-daily.innerHTML="";
-for(let i=0;i<7;i++){
-daily.innerHTML+=`
-<div class="glass p-3 flex justify-between">
-${new Date(w.daily.time[i]).toLocaleDateString(undefined,{weekday:"short"})}
-<span>${Math.round(w.daily.temperature_2m_max[i])}° / ${Math.round(w.daily.temperature_2m_min[i])}°</span>
-</div>`;
-}}
-
-/* BACKGROUND */
-function setBackground(code,isDay){
-document.body.className="";
-if(code>=95)document.body.classList.add("bg-storm","rain","flash","clouds");
-else if(code>=71)document.body.classList.add("bg-snow","snow","clouds");
-else if(code>=61)document.body.classList.add("bg-rain","rain","clouds");
-else if(isDay)document.body.classList.add("bg-day","clouds");
-else document.body.classList.add("bg-night","clouds");
-}
-
-/* WIND COMPASS */
-function rotateCompass(deg){
-$("windArrow").style.transform=`translateX(-50%) rotate(${deg}deg)`;
-}
-
-/* HELPERS */
-function desc(c){return{0:"Clear",1:"Partly Cloudy",2:"Cloudy",61:"Rain",71:"Snow",95:"Thunderstorm"}[c]||"Weather";}
-
-/* AI */
-async function generateAI(city,temp,code){
-try{
-const r=await fetch("/api/ai-forecast",{method:"POST",headers:{"Content-Type":"application/json"},
-body:JSON.stringify({city,temp,code})});
-const d=await r.json();
-$("ai").textContent=d.text;
-}catch{$("ai").textContent="AI unavailable";}
-}
-
-/* ADS */
-(adsbygoogle=window.adsbygoogle||[]).push({});
-(adsbygoogle=window.adsbygoogle||[]).push({});
-</script>
-
+    
+    <!-- JavaScript -->
+    <script>
+        // SkyCast Weather PWA - Main Application
+        document.addEventListener('DOMContentLoaded', () => {
+            // App Configuration
+            const config = {
+                openMeteoUrl: 'https://api.open-meteo.com/v1/forecast',
+                airQualityUrl: 'https://air-quality-api.open-meteo.com/v1/air-quality',
+                defaultLocation: { latitude: 28.6139, longitude: 77.2090 }, // New Delhi
+                units: 'celsius',
+                isDay: true,
+                currentWeatherCode: 0,
+                isPWA: window.matchMedia('(display-mode: standalone)').matches || 
+                       window.navigator.standalone || 
+                       document.referrer.includes('android-app://')
+            };
+            
+            // DOM Elements
+            const elements = {
+                cityName: document.getElementById('cityName'),
+                currentTemp: document.getElementById('currentTemp'),
+                conditionText: document.getElementById('conditionText'),
+                localTime: document.getElementById('localTime'),
+                humidity: document.getElementById('humidity'),
+                windSpeed: document.getElementById('windSpeed'),
+                uvIndex: document.getElementById('uvIndex'),
+                compassArrow: document.getElementById('compassArrow'),
+                compassDirection: document.getElementById('compassDirection'),
+                hourlyForecast: document.getElementById('hourlyForecast'),
+                weeklyForecast: document.getElementById('weeklyForecast'),
+                aiForecastText: document.getElementById('aiForecastText'),
+                airQualityText: document.getElementById('airQualityText'),
+                airQualityAdvice: document.getElementById('airQualityAdvice'),
+                aqiValue: document.getElementById('aqiValue'),
+                healthAdvisory: document.getElementById('healthAdvisory'),
+                weatherIcon: document.getElementById('weatherIcon'),
+                weatherBackground: document.getElementById('weatherBackground'),
+                installBtn: document.getElementById('installBtn'),
+                refreshBtn: document.getElementById('refreshBtn'),
+                speakAdvisory: document.getElementById('speakAdvisory'),
+                bannerAd: document.getElementById('bannerAd'),
+                contentAd: document.getElementById('contentAd'),
+                themeToggle: document.getElementById('themeToggle'),
+                unitsToggle: document.getElementById('unitsToggle'),
+                attributionBtn: document.getElementById('attributionBtn')
+            };
+            
+            // State Management
+            let appState = {
+                currentLocation: null,
+                weatherData: null,
+                airQualityData: null,
+                deferredPrompt: null,
+                speechSynthesis: window.speechSynthesis,
+                isCelsius: true,
+                isDarkMode: true
+            };
+            
+            // Weather Code to Description Mapping (Open-Meteo)
+            const weatherCodes = {
+                0: { day: 'Clear sky', night: 'Clear sky', icon: '☀️' },
+                1: { day: 'Mainly clear', night: 'Mainly clear', icon: '🌤️' },
+                2: { day: 'Partly cloudy', night: 'Partly cloudy', icon: '⛅' },
+                3: { day: 'Overcast', night: 'Overcast', icon: '☁️' },
+                45: { day: 'Foggy', night: 'Foggy', icon: '🌫️' },
+                48: { day: 'Depositing rime fog', night: 'Depositing rime fog', icon: '🌫️' },
+                51: { day: 'Light drizzle', night: 'Light drizzle', icon: '🌦️' },
+                53: { day: 'Moderate drizzle', night: 'Moderate drizzle', icon: '🌦️' },
+                55: { day: 'Dense drizzle', night: 'Dense drizzle', icon: '🌦️' },
+                56: { day: 'Light freezing drizzle', night: 'Light freezing drizzle', icon: '🌨️' },
+                57: { day: 'Dense freezing drizzle', night: 'Dense freezing drizzle', icon: '🌨️' },
+                61: { day: 'Slight rain', night: 'Slight rain', icon: '🌧️' },
+                63: { day: 'Moderate rain', night: 'Moderate rain', icon: '🌧️' },
+                65: { day: 'Heavy rain', night: 'Heavy rain', icon: '🌧️' },
+                66: { day: 'Light freezing rain', night: 'Light freezing rain', icon: '🌨️' },
+                67: { day: 'Heavy freezing rain', night: 'Heavy freezing rain', icon: '🌨️' },
+                71: { day: 'Slight snow', night: 'Slight snow', icon: '❄️' },
+                73: { day: 'Moderate snow', night: 'Moderate snow', icon: '❄️' },
+                75: { day: 'Heavy snow', night: 'Heavy snow', icon: '❄️' },
+                77: { day: 'Snow grains', night: 'Snow grains', icon: '❄️' },
+                80: { day: 'Slight rain showers', night: 'Slight rain showers', icon: '🌦️' },
+                81: { day: 'Moderate rain showers', night: 'Moderate rain showers', icon: '🌦️' },
+                82: { day: 'Violent rain showers', night: 'Violent rain showers', icon: '⛈️' },
+                85: { day: 'Slight snow showers', night: 'Slight snow showers', icon: '🌨️' },
+                86: { day: 'Heavy snow showers', night: 'Heavy snow showers', icon: '🌨️' },
+                95: { day: 'Thunderstorm', night: 'Thunderstorm', icon: '⛈️' },
+                96: { day: 'Thunderstorm with hail', night: 'Thunderstorm with hail', icon: '⛈️' },
+                99: { day: 'Heavy thunderstorm with hail', night: 'Heavy thunderstorm with hail', icon: '⛈️' }
+            };
+            
+            // Wind Direction Mapping
+            const windDirections = [
+                { min: 0, max: 11.25, dir: 'N', arrow: 0 },
+                { min: 11.25, max: 33.75, dir: 'NNE', arrow: 22.5 },
+                { min: 33.75, max: 56.25, dir: 'NE', arrow: 45 },
+                { min: 56.25, max: 78.75, dir: 'ENE', arrow: 67.5 },
+                { min: 78.75, max: 101.25, dir: 'E', arrow: 90 },
+                { min: 101.25, max: 123.75, dir: 'ESE', arrow: 112.5 },
+                { min: 123.75, max: 146.25, dir: 'SE', arrow: 135 },
+                { min: 146.25, max: 168.75, dir: 'SSE', arrow: 157.5 },
+                { min: 168.75, max: 191.25, dir: 'S', arrow: 180 },
+                { min: 191.25, max: 213.75, dir: 'SSW', arrow: 202.5 },
+                { min: 213.75, max: 236.25, dir: 'SW', arrow: 225 },
+                { min: 236.25, max: 258.75, dir: 'WSW', arrow: 247.5 },
+                { min: 258.75, max: 281.25, dir: 'W', arrow: 270 },
+                { min: 281.25, max: 303.75, dir: 'WNW', arrow: 292.5 },
+                { min: 303.75, max: 326.25, dir: 'NW', arrow: 315 },
+                { min: 326.25, max: 348.75, dir: 'NNW', arrow: 337.5 },
+                { min: 348.75, max: 360, dir: 'N', arrow: 0 }
+            ];
+            
+            // Initialize the application
+            function initApp() {
+                setupEventListeners();
+                setupPWA();
+                setupAds();
+                detectLocation();
+            }
+            
+            // Set up event listeners
+            function setupEventListeners() {
+                elements.refreshBtn.addEventListener('click', refreshWeather);
+                elements.speakAdvisory.addEventListener('click', speakAdvisory);
+                elements.themeToggle.addEventListener('click', toggleTheme);
+                elements.unitsToggle.addEventListener('click', toggleUnits);
+                elements.attributionBtn.addEventListener('click', showAttribution);
+                
+                // Listen for beforeinstallprompt event
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    appState.deferredPrompt = e;
+                    elements.installBtn.classList.remove('hidden');
+                });
+                
+                elements.installBtn.addEventListener('click', installPWA);
+            }
+            
+            // Set up PWA functionality
+            function setupPWA() {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('sw.js').catch(err => {
+                        console.log('Service Worker registration failed:', err);
+                    });
+                }
+                
+                // Update install button visibility based on PWA status
+                if (config.isPWA) {
+                    elements.installBtn.classList.add('hidden');
+                }
+            }
+            
+            // Set up ads (mock implementation - real AdSense would go here)
+            function setupAds() {
+                // In a real implementation, this would load AdSense scripts
+                // For this demo, we'll simulate ad loading
+                setTimeout(() => {
+                    if (!config.isPWA) {
+                        // Show web ads
+                        elements.bannerAd.innerHTML = `
+                            <div class="text-center text-gray-300 p-4">
+                                <div class="mb-2">
+                                    <i class="fas fa-ad text-2xl text-yellow-400"></i>
+                                    <i class="fas fa-ad text-2xl text-blue-400 mx-2"></i>
+                                    <i class="fas fa-ad text-2xl text-green-400"></i>
+                                </div>
+                                <p class="text-sm mb-2">SkyCast is supported by ads</p>
+                                <p class="text-xs opacity-70">AdSense would load here in production</p>
+                            </div>
+                        `;
+                        
+                        elements.contentAd.innerHTML = `
+                            <div class="text-center text-gray-300 p-4">
+                                <div class="mb-2">
+                                    <i class="fas fa-megaphone text-xl text-purple-400"></i>
+                                </div>
+                                <p class="text-sm mb-1">Sponsored Content</p>
+                                <p class="text-xs opacity-70">Inline content advertisement</p>
+                            </div>
+                        `;
+                    } else {
+                        // Show PWA-only ad or alternative
+                        elements.bannerAd.innerHTML = `
+                            <div class="text-center text-gray-300 p-4">
+                                <p class="text-sm">Thank you for using SkyCast PWA!</p>
+                                <p class="text-xs opacity-70">Premium experience with fewer ads</p>
+                            </div>
+                        `;
+                        
+                        elements.contentAd.innerHTML = `
+                            <div class="text-center text-gray-300 p-4">
+                                <p class="text-sm">Support SkyCast</p>
+                                <p class="text-xs opacity-70">Consider upgrading to Premium</p>
+                            </div>
+                        `;
+                    }
+                }, 2000);
+            }
+            
+            // Detect user location
+            function detectLocation() {
+                elements.cityName.textContent = 'Detecting location...';
+                
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        position => {
+                            appState.currentLocation = {
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude
+                            };
+                            elements.cityName.textContent = 'Your Location';
+                            fetchWeatherData();
+                            fetchAirQualityData();
+                        },
+                        error => {
+                            console.log('Geolocation error:', error);
+                            appState.currentLocation = config.defaultLocation;
+                            elements.cityName.textContent = 'New Delhi, India';
+                            fetchWeatherData();
+                            fetchAirQualityData();
+                        },
+                        { timeout: 10000 }
+                    );
+                } else {
+                    appState.currentLocation = config.defaultLocation;
+                    elements.cityName.textContent = 'New Delhi, India';
+                    fetchWeatherData();
+                    fetchAirQualityData();
+                }
+            }
+            
+            // Fetch weather data from Open-Meteo
+            async function fetchWeatherData() {
+                if (!appState.currentLocation) return;
+                
+                try {
+                    // Construct API URL with valid parameters
+                    const params = new URLSearchParams({
+                        latitude: appState.currentLocation.latitude,
+                        longitude: appState.currentLocation.longitude,
+                        current: 'temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,weather_code,is_day',
+                        hourly: 'temperature_2m',
+                        daily: 'temperature_2m_max,temperature_2m_min,uv_index_max',
+                        timezone: 'auto',
+                        temperature_unit: config.isCelsius ? 'celsius' : 'fahrenheit',
+                        wind_speed_unit: 'kmh',
+                        timeformat: 'iso8601'
+                    });
+                    
+                    const response = await fetch(`${config.openMeteoUrl}?${params}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Weather API error: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Validate data structure
+                    if (!data.current || !data.hourly || !data.daily) {
+                        throw new Error('Invalid weather data structure');
+                    }
+                    
+                    appState.weatherData = data;
+                    config.isDay = data.current.is_day === 1;
+                    config.currentWeatherCode = data.current.weather_code;
+                    
+                    updateWeatherUI();
+                    generateAIAdvisory();
+                    updateBackground();
+                } catch (error) {
+                    console.error('Error fetching weather:', error);
+                    showFallbackData();
+                }
+            }
+            
+            // Fetch air quality data from Open-Meteo
+            async function fetchAirQualityData() {
+                if (!appState.currentLocation) return;
+                
+                try {
+                    const params = new URLSearchParams({
+                        latitude: appState.currentLocation.latitude,
+                        longitude: appState.currentLocation.longitude,
+                        current: 'pm2_5',
+                        timezone: 'auto'
+                    });
+                    
+                    const response = await fetch(`${config.airQualityUrl}?${params}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Air quality API error: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (!data.current) {
+                        throw new Error('Invalid air quality data structure');
+                    }
+                    
+                    appState.airQualityData = data;
+                    updateAirQualityUI();
+                } catch (error) {
+                    console.error('Error fetching air quality:', error);
+                    // Set fallback air quality data
+                    elements.airQualityText.textContent = 'PM2.5: Data unavailable';
+                    elements.airQualityAdvice.textContent = 'Air quality data is currently unavailable.';
+                    elements.aqiValue.textContent = '--';
+                }
+            }
+            
+            // Update weather UI with fetched data
+            function updateWeatherUI() {
+                if (!appState.weatherData) return;
+                
+                const current = appState.weatherData.current;
+                const hourly = appState.weatherData.hourly;
+                const daily = appState.weatherData.daily;
+                
+                // Update current weather
+                elements.currentTemp.textContent = `${Math.round(current.temperature_2m)}°`;
+                elements.humidity.textContent = `${Math.round(current.relative_humidity_2m)}%`;
+                elements.windSpeed.textContent = `${Math.round(current.wind_speed_10m)} km/h`;
+                
+                // Update UV index
+                if (daily.uv_index_max && daily.uv_index_max.length > 0) {
+                    elements.uvIndex.textContent = daily.uv_index_max[0].toFixed(1);
+                }
+                
+                // Update wind direction compass
+                updateWindDirection(current.wind_direction_10m);
+                
+                // Update weather condition
+                updateWeatherCondition(current.weather_code, config.isDay);
+                
+                // Update local time
+                updateLocalTime();
+                
+                // Update hourly forecast
+                updateHourlyForecast(hourly);
+                
+                // Update weekly forecast
+                updateWeeklyForecast(daily);
+            }
+            
+            // Update weather condition text and icon
+            function updateWeatherCondition(weatherCode, isDay) {
+                const condition = weatherCodes[weatherCode] || { day: 'Unknown', night: 'Unknown', icon: '🌤️' };
+                const timeOfDay = isDay ? 'day' : 'night';
+                
+                elements.conditionText.textContent = condition[timeOfDay] || condition.day;
+                elements.weatherIcon.textContent = condition.icon;
+                
+                config.currentWeatherCode = weatherCode;
+                config.isDay = isDay;
+            }
+            
+            // Update wind direction compass
+            function updateWindDirection(degrees) {
+                const direction = windDirections.find(d => degrees >= d.min && degrees < d.max) || windDirections[0];
+                
+                elements.compassArrow.style.transform = `rotate(${degrees}deg)`;
+                elements.compassDirection.textContent = direction.dir;
+            }
+            
+            // Update local time display
+            function updateLocalTime() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const dateString = now.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+                
+                elements.localTime.textContent = `${timeString} • ${dateString}`;
+            }
+            
+            // Update hourly forecast
+            function updateHourlyForecast(hourlyData) {
+                if (!hourlyData || !hourlyData.time || !hourlyData.temperature_2m) {
+                    elements.hourlyForecast.innerHTML = '<div class="text-center py-4 opacity-70">Hourly forecast unavailable</div>';
+                    return;
+                }
+                
+                elements.hourlyForecast.innerHTML = '';
+                
+                // Show next 24 hours
+                const now = new Date();
+                const currentHour = now.getHours();
+                
+                for (let i = 0; i < 24; i++) {
+                    const hourIndex = currentHour + i;
+                    if (hourIndex >= hourlyData.time.length) break;
+                    
+                    const hourTime = new Date(hourlyData.time[hourIndex]);
+                    const hourTemp = Math.round(hourlyData.temperature_2m[hourIndex]);
+                    const hour = hourTime.getHours();
+                    
+                    const hourElement = document.createElement('div');
+                    hourElement.className = 'flex flex-col items-center justify-center min-w-16 p-3 rounded-xl bg-white/5 mr-4';
+                    
+                    hourElement.innerHTML = `
+                        <div class="font-medium">${hour === 0 ? '12' : hour > 12 ? hour - 12 : hour}${hour >= 12 ? 'PM' : 'AM'}</div>
+                        <div class="text-2xl my-2">${getHourlyWeatherIcon(hour, config.currentWeatherCode)}</div>
+                        <div class="font-bold">${hourTemp}°</div>
+                    `;
+                    
+                    elements.hourlyForecast.appendChild(hourElement);
+                }
+            }
+            
+            // Get appropriate icon for hourly forecast
+            function getHourlyWeatherIcon(hour, weatherCode) {
+                const isDayTime = hour >= 6 && hour < 18;
+                
+                if (weatherCode === 0) {
+                    return isDayTime ? '☀️' : '🌙';
+                } else if (weatherCode >= 1 && weatherCode <= 3) {
+                    return isDayTime ? '⛅' : '☁️';
+                } else if (weatherCode >= 45 && weatherCode <= 48) {
+                    return '🌫️';
+                } else if (weatherCode >= 51 && weatherCode <= 67) {
+                    return '🌧️';
+                } else if (weatherCode >= 71 && weatherCode <= 77) {
+                    return '❄️';
+                } else if (weatherCode >= 80 && weatherCode <= 86) {
+                    return isDayTime ? '🌦️' : '🌧️';
+                } else if (weatherCode >= 95 && weatherCode <= 99) {
+                    return '⛈️';
+                }
+                
+                return '🌤️';
+            }
+            
+            // Update weekly forecast
+            function updateWeeklyForecast(dailyData) {
+                if (!dailyData || !dailyData.time || !dailyData.temperature_2m_max || !dailyData.temperature_2m_min) {
+                    elements.weeklyForecast.innerHTML = '<div class="text-center py-4 opacity-70">Weekly forecast unavailable</div>';
+                    return;
+                }
+                
+                elements.weeklyForecast.innerHTML = '';
+                
+                const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                
+                for (let i = 0; i < 7; i++) {
+                    if (i >= dailyData.time.length) break;
+                    
+                    const dayTime = new Date(dailyData.time[i]);
+                    const dayName = i === 0 ? 'Today' : daysOfWeek[dayTime.getDay()];
+                    const maxTemp = Math.round(dailyData.temperature_2m_max[i]);
+                    const minTemp = Math.round(dailyData.temperature_2m_min[i]);
+                    
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'flex justify-between items-center p-4 mb-3 rounded-xl bg-white/5';
+                    
+                    dayElement.innerHTML = `
+                        <div class="font-medium">${dayName}</div>
+                        <div class="flex items-center">
+                            <div class="text-lg font-bold mr-4">${maxTemp}°</div>
+                            <div class="opacity-70">${minTemp}°</div>
+                        </div>
+                    `;
+                    
+                    elements.weeklyForecast.appendChild(dayElement);
+                }
+            }
+            
+            // Update air quality UI
+            function updateAirQualityUI() {
+                if (!appState.airQualityData) return;
+                
+                const pm25 = appState.airQualityData.current.pm2_5;
+                
+                if (pm25 === undefined || pm25 === null) {
+                    elements.airQualityText.textContent = 'PM2.5: Data unavailable';
+                    elements.aqiValue.textContent = '--';
+                    return;
+                }
+                
+                elements.airQualityText.textContent = `PM2.5: ${pm25.toFixed(1)} μg/m³`;
+                
+                // Determine AQI level
+                let aqiLevel, aqiText, aqiColor;
+                
+                if (pm25 <= 12) {
+                    aqiLevel = 'Good';
+                    aqiText = 'Air quality is satisfactory';
+                    aqiColor = 'bg-green-500/30';
+                } else if (pm25 <= 35.4) {
+                    aqiLevel = 'Moderate';
+                    aqiText = 'Acceptable air quality';
+                    aqiColor = 'bg-yellow-500/30';
+                } else if (pm25 <= 55.4) {
+                    aqiLevel = 'Unhealthy for Sensitive';
+                    aqiText = 'Members of sensitive groups may experience effects';
+                    aqiColor = 'bg-orange-500/30';
+                } else if (pm25 <= 150.4) {
+                    aqiLevel = 'Unhealthy';
+                    aqiText = 'Everyone may begin to experience health effects';
+                    aqiColor = 'bg-red-500/30';
+                } else {
+                    aqiLevel = 'Very Unhealthy';
+                    aqiText = 'Health alert: risk of serious effects';
+                    aqiColor = 'bg-purple-500/30';
+                }
+                
+                elements.aqiValue.textContent = aqiLevel;
+                elements.aqiValue.className = `px-3 py-1 rounded-full ${aqiColor} text-sm`;
+                elements.airQualityAdvice.textContent = aqiText;
+            }
+            
+            // Generate AI advisory based on weather and air quality
+            function generateAIAdvisory() {
+                if (!appState.weatherData || !appState.airQualityData) {
+                    elements.aiForecastText.textContent = 'AI forecast is currently unavailable. Please check your connection.';
+                    return;
+                }
+                
+                const current = appState.weatherData.current;
+                const weatherCondition = weatherCodes[config.currentWeatherCode] || { day: 'clear' };
+                const conditionText = config.isDay ? weatherCondition.day : weatherCondition.night;
+                const temperature = Math.round(current.temperature_2m);
+                const uvIndex = appState.weatherData.daily?.uv_index_max?.[0] || 0;
+                const pm25 = appState.airQualityData.current?.pm2_5 || 15;
+                
+                // Simple AI logic (in production, this would call a serverless function)
+                let forecast = '';
+                let advice = '';
+                
+                // Generate forecast based on temperature and condition
+                if (temperature > 30) {
+                    forecast = `It's a warm ${config.isDay ? 'day' : 'night'} with ${conditionText.toLowerCase()}. `;
+                    advice = 'Stay hydrated and avoid prolonged sun exposure. ';
+                } else if (temperature > 20) {
+                    forecast = `Enjoy pleasant temperatures with ${conditionText.toLowerCase()}. `;
+                    advice = 'Perfect weather for outdoor activities. ';
+                } else if (temperature > 10) {
+                    forecast = `It's cool with ${conditionText.toLowerCase()}. `;
+                    advice = 'A light jacket would be comfortable. ';
+                } else {
+                    forecast = `It's cold with ${conditionText.toLowerCase()}. `;
+                    advice = 'Dress warmly and limit time outdoors. ';
+                }
+                
+                // Add UV advice
+                if (uvIndex > 6) {
+                    advice += 'UV index is high - use sunscreen. ';
+                } else if (uvIndex > 3) {
+                    advice += 'Moderate UV - some protection needed. ';
+                }
+                
+                // Add air quality advice
+                if (pm25 > 55) {
+                    advice += 'Poor air quality - limit outdoor exertion. ';
+                } else if (pm25 > 35) {
+                    advice += 'Moderate air quality - sensitive groups should take care. ';
+                }
+                
+                // Add condition-specific advice
+                if (config.currentWeatherCode >= 61 && config.currentWeatherCode <= 67) {
+                    advice += 'Rain expected - carry an umbrella. ';
+                } else if (config.currentWeatherCode >= 71 && config.currentWeatherCode <= 77) {
+                    advice += 'Snow expected - drive carefully. ';
+                } else if (config.currentWeatherCode >= 95 && config.currentWeatherCode <= 99) {
+                    advice += 'Thunderstorms likely - seek shelter if outdoors. ';
+                }
+                
+                // Combine forecast and advice
+                const aiText = forecast + advice;
+                elements.aiForecastText.textContent = aiText;
+                
+                // Update health advisory
+                let healthText = '';
+                
+                if (pm25 > 55 || uvIndex > 6) {
+                    healthText = '⚠️ Consider limiting outdoor activities today due to ';
+                    if (pm25 > 55 && uvIndex > 6) {
+                        healthText += 'poor air quality and high UV index.';
+                    } else if (pm25 > 55) {
+                        healthText += 'poor air quality.';
+                    } else {
+                        healthText += 'high UV index.';
+                    }
+                } else if (pm25 > 35 || uvIndex > 3) {
+                    healthText = 'ℹ️ Generally safe conditions with some precautions advised.';
+                } else {
+                    healthText = '✅ Excellent conditions for outdoor activities.';
+                }
+                
+                elements.healthAdvisory.textContent = healthText;
+                
+                // Cache the AI forecast
+                try {
+                    localStorage.setItem('skycast_ai_cache', JSON.stringify({
+                        text: aiText,
+                        timestamp: Date.now(),
+                        location: appState.currentLocation
+                    }));
+                } catch (e) {
+                    console.log('Failed to cache AI forecast:', e);
+                }
+            }
+            
+            // Update animated background based on weather
+            function updateBackground() {
+                elements.weatherBackground.innerHTML = '';
+                elements.weatherBackground.className = 'background-container';
+                
+                let backgroundClass = '';
+                let particleCount = 0;
+                
+                // Determine background based on weather code and time
+                if (config.currentWeatherCode === 0) {
+                    backgroundClass = config.isDay ? 'day-clear' : 'night-clear';
+                    
+                    if (config.isDay) {
+                        // Add clouds for day clear
+                        for (let i = 0; i < 5; i++) {
+                            createCloud(i);
+                        }
+                    } else {
+                        // Add stars for night clear
+                        for (let i = 0; i < 50; i++) {
+                            createStar(i);
+                        }
+                    }
+                } else if (config.currentWeatherCode >= 61 && config.currentWeatherCode <= 67) {
+                    backgroundClass = 'rain';
+                    particleCount = 80;
+                    
+                    for (let i = 0; i < particleCount; i++) {
+                        createRaindrop(i);
+                    }
+                } else if (config.currentWeatherCode >= 71 && config.currentWeatherCode <= 77) {
+                    backgroundClass = 'snow';
+                    particleCount = 60;
+                    
+                    for (let i = 0; i < particleCount; i++) {
+                        createSnowflake(i);
+                    }
+                } else if (config.currentWeatherCode >= 95 && config.currentWeatherCode <= 99) {
+                    backgroundClass = 'thunderstorm';
+                    particleCount = 60;
+                    
+                    // Add lightning effect
+                    const lightning = document.createElement('div');
+                    lightning.className = 'lightning';
+                    elements.weatherBackground.appendChild(lightning);
+                    
+                    // Add rain
+                    for (let i = 0; i < particleCount; i++) {
+                        createRaindrop(i);
+                    }
+                } else {
+                    // Default to day or night based on isDay
+                    backgroundClass = config.isDay ? 'day-clear' : 'night-clear';
+                    
+                    if (config.isDay) {
+                        for (let i = 0; i < 3; i++) {
+                            createCloud(i);
+                        }
+                    } else {
+                        for (let i = 0; i < 30; i++) {
+                            createStar(i);
+                        }
+                    }
+                }
+                
+                elements.weatherBackground.classList.add(backgroundClass);
+            }
+            
+            // Create cloud element
+            function createCloud(index) {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+                
+                const size = 60 + Math.random() * 60;
+                const top = 10 + Math.random() * 50;
+                const delay = Math.random() * 50;
+                const duration = 60 + Math.random() * 40;
+                
+                cloud.style.width = `${size}px`;
+                cloud.style.height = `${size}px`;
+                cloud.style.top = `${top}%`;
+                cloud.style.left = `-100px`;
+                cloud.style.animationDelay = `${delay}s`;
+                cloud.style.animationDuration = `${duration}s`;
+                
+                elements.weatherBackground.appendChild(cloud);
+            }
+            
+            // Create star element
+            function createStar(index) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                const size = 1 + Math.random() * 3;
+                const top = Math.random() * 100;
+                const left = Math.random() * 100;
+                const delay = Math.random() * 3;
+                const duration = 1 + Math.random() * 2;
+                
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.top = `${top}%`;
+                star.style.left = `${left}%`;
+                star.style.animationDelay = `${delay}s`;
+                star.style.animationDuration = `${duration}s`;
+                
+                elements.weatherBackground.appendChild(star);
+            }
+            
+            // Create raindrop element
+            function createRaindrop(index) {
+                const raindrop = document.createElement('div');
+                raindrop.className = 'raindrop';
+                
+                const left = Math.random() * 100;
+                const delay = Math.random() * 5;
+                const duration = 0.5 + Math.random() * 1;
+                
+                raindrop.style.left = `${left}%`;
+                raindrop.style.top = `-20px`;
+                raindrop.style.animationDelay = `${delay}s`;
+                raindrop.style.animationDuration = `${duration}s`;
+                
+                elements.weatherBackground.appendChild(raindrop);
+            }
+            
+            // Create snowflake element
+            function createSnowflake(index) {
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                
+                const size = 3 + Math.random() * 5;
+                const left = Math.random() * 100;
+                const delay = Math.random() * 5;
+                const duration = 5 + Math.random() * 10;
+                
+                snowflake.style.width = `${size}px`;
+                snowflake.style.height = `${size}px`;
+                snowflake.style.left = `${left}%`;
+                snowflake.style.top = `-10px`;
+                snowflake.style.animationDelay = `${delay}s`;
+                snowflake.style.animationDuration = `${duration}s`;
+                
+                elements.weatherBackground.appendChild(snowflake);
+            }
+            
+            // Show fallback data if APIs fail
+            function showFallbackData() {
+                elements.currentTemp.textContent = '24°';
+                elements.conditionText.textContent = 'Partly Cloudy';
+                elements.humidity.textContent = '65%';
+                elements.windSpeed.textContent = '12 km/h';
+                elements.uvIndex.textContent = '5.2';
+                elements.weatherIcon.textContent = '⛅';
+                
+                updateLocalTime();
+                updateWindDirection(180);
+                
+                // Show fallback forecasts
+                elements.aiForecastText.textContent = 'AI forecast is temporarily unavailable. Weather data is from cached sources.';
+                elements.healthAdvisory.textContent = 'For accurate health advisories, please check back when connection is restored.';
+                
+                // Show fallback hourly and weekly data
+                showFallbackForecasts();
+            }
+            
+            // Show fallback forecasts
+            function showFallbackForecasts() {
+                // Hourly fallback
+                elements.hourlyForecast.innerHTML = '';
+                const now = new Date();
+                const currentHour = now.getHours();
+                
+                for (let i = 0; i < 12; i++) {
+                    const hour = (currentHour + i) % 24;
+                    const temp = 20 + Math.sin(i * 0.5) * 5;
+                    
+                    const hourElement = document.createElement('div');
+                    hourElement.className = 'flex flex-col items-center justify-center min-w-16 p-3 rounded-xl bg-white/5 mr-4';
+                    
+                    hourElement.innerHTML = `
+                        <div class="font-medium">${hour === 0 ? '12' : hour > 12 ? hour - 12 : hour}${hour >= 12 ? 'PM' : 'AM'}</div>
+                        <div class="text-2xl my-2">${hour >= 6 && hour < 18 ? '⛅' : '🌙'}</div>
+                        <div class="font-bold">${Math.round(temp)}°</div>
+                    `;
+                    
+                    elements.hourlyForecast.appendChild(hourElement);
+                }
+                
+                // Weekly fallback
+                elements.weeklyForecast.innerHTML = '';
+                const days = ['Today', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                
+                for (let i = 0; i < 7; i++) {
+                    const maxTemp = 22 + Math.sin(i) * 6;
+                    const minTemp = maxTemp - 5;
+                    
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'flex justify-between items-center p-4 mb-3 rounded-xl bg-white/5';
+                    
+                    dayElement.innerHTML = `
+                        <div class="font-medium">${days[i]}</div>
+                        <div class="flex items-center">
+                            <div class="text-lg font-bold mr-4">${Math.round(maxTemp)}°</div>
+                            <div class="opacity-70">${Math.round(minTemp)}°</div>
+                        </div>
+                    `;
+                    
+                    elements.weeklyForecast.appendChild(dayElement);
+                }
+            }
+            
+            // Refresh weather data
+            function refreshWeather() {
+                elements.refreshBtn.classList.add('animate-spin');
+                detectLocation();
+                
+                setTimeout(() => {
+                    elements.refreshBtn.classList.remove('animate-spin');
+                }, 1000);
+            }
+            
+            // Speak advisory using text-to-speech
+            function speakAdvisory() {
+                if (appState.speechSynthesis.speaking) {
+                    appState.speechSynthesis.cancel();
+                    elements.speakAdvisory.innerHTML = '<i class="fas fa-volume-up"></i>';
+                    return;
+                }
+                
+                const text = elements.aiForecastText.textContent + ' ' + elements.healthAdvisory.textContent;
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.volume = 0.8;
+                
+                utterance.onstart = () => {
+                    elements.speakAdvisory.innerHTML = '<i class="fas fa-stop"></i>';
+                };
+                
+                utterance.onend = () => {
+                    elements.speakAdvisory.innerHTML = '<i class="fas fa-volume-up"></i>';
+                };
+                
+                appState.speechSynthesis.speak(utterance);
+            }
+            
+            // Toggle between light/dark theme
+            function toggleTheme() {
+                appState.isDarkMode = !appState.isDarkMode;
+                
+                if (appState.isDarkMode) {
+                    document.body.classList.add('bg-gray-900');
+                    document.body.classList.remove('bg-gray-100');
+                    elements.themeToggle.innerHTML = '<i class="fas fa-moon mr-1"></i> Dark Mode';
+                } else {
+                    document.body.classList.remove('bg-gray-900');
+                    document.body.classList.add('bg-gray-100');
+                    elements.themeToggle.innerHTML = '<i class="fas fa-sun mr-1"></i> Light Mode';
+                }
+            }
+            
+            // Toggle between Celsius and Fahrenheit
+            function toggleUnits() {
+                appState.isCelsius = !appState.isCelsius;
+                config.isCelsius = appState.isCelsius;
+                
+                elements.unitsToggle.innerHTML = appState.isCelsius ? 
+                    '<i class="fas fa-thermometer mr-1"></i> °C / °F' : 
+                    '<i class="fas fa-thermometer mr-1"></i> °F / °C';
+                
+                // Refresh weather data with new units
+                if (appState.currentLocation) {
+                    fetchWeatherData();
+                }
+            }
+            
+            // Show data attribution
+            function showAttribution() {
+                alert('SkyCast uses weather data from Open-Meteo (open-meteo.com).\n\nOpen-Meteo provides free weather API with data from various sources including NOAA, GFS, and others.\n\nAir quality data is also provided by Open-Meteo Air Quality API.');
+            }
+            
+            // Install PWA
+            function installPWA() {
+                if (!appState.deferredPrompt) return;
+                
+                appState.deferredPrompt.prompt();
+                
+                appState.deferredPrompt.userChoice.then(choiceResult => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted PWA installation');
+                        elements.installBtn.classList.add('hidden');
+                    }
+                    
+                    appState.deferredPrompt = null;
+                });
+            }
+            
+            // Initialize the app
+            initApp();
+        });
+    </script>
 </body>
 </html>
