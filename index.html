@@ -159,33 +159,82 @@
         
         /* Wind Compass */
         .compass {
-            width: 120px;
-            height: 120px;
+            width: 140px;
+            height: 140px;
             position: relative;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: radial-gradient(
+                circle at top,
+                rgba(255,255,255,0.25),
+                rgba(255,255,255,0.05)
+            );
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.25);
+            box-shadow:
+                inset 0 0 20px rgba(255,255,255,0.15),
+                0 10px 30px rgba(0,0,0,0.35);
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
-        .compass-arrow {
-            width: 4px;
-            height: 50px;
-            background: #fff;
+        /* Outer ring */
+        .compass-ring {
             position: absolute;
-            top: 10px;
-            transform-origin: bottom center;
-            border-radius: 4px;
-            transition: transform 0.5s ease;
+            inset: 8px;
+            border-radius: 50%;
+            border: 1px dashed rgba(255,255,255,0.25);
         }
         
+        /* Needle */
+        .compass-needle {
+            position: absolute;
+            width: 4px;
+            height: 55px;
+            background: linear-gradient(
+                to top,
+                rgba(255,255,255,0.2),
+                #ffffff
+            );
+            top: 18px;
+            transform-origin: bottom center;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.8);
+            transition: transform 0.6s cubic-bezier(.4,0,.2,1);
+        }
+        
+        /* Center pivot */
+        .compass-center {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(255,255,255,0.8);
+            z-index: 5;
+        }
+        
+        /* Cardinal letters */
+        .cardinal {
+            position: absolute;
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0.8;
+        }
+        
+        .cardinal.n { top: 6px; }
+        .cardinal.s { bottom: 6px; }
+        .cardinal.e { right: 8px; }
+        .cardinal.w { left: 8px; }
+        
+        /* Direction text */
         .compass-direction {
             position: absolute;
-            bottom: 10px;
-            font-weight: 600;
+            bottom: -26px;
             font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            opacity: 0.9;
         }
         
         /* Hourly Forecast Scroll */
@@ -468,8 +517,22 @@
                 <div class="mt-8 flex flex-col items-center">
                     <h3 class="text-lg font-semibold mb-4">Wind Direction</h3>
                     <div class="compass">
-                        <div id="compassArrow" class="compass-arrow"></div>
-                        <div id="compassDirection" class="compass-direction">N</div>
+                        <div class="compass-ring"></div>
+                        
+                        <!-- Cardinal directions -->
+                        <span class="cardinal n">N</span>
+                        <span class="cardinal e">E</span>
+                        <span class="cardinal s">S</span>
+                        <span class="cardinal w">W</span>
+                        
+                        <!-- Needle -->
+                        <div id="compassArrow" class="compass-needle"></div>
+                        
+                        <!-- Center pivot -->
+                        <div class="compass-center"></div>
+                        
+                        <!-- Direction label -->
+                        <div id="compassDirection" class="compass-direction">NE</div>
                     </div>
                 </div>
             </div>
