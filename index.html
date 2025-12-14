@@ -513,26 +513,63 @@
                     </div>
                 </div>
                 
-                <!-- Wind Compass -->
-                <div class="mt-8 flex flex-col items-center">
-                    <h3 class="text-lg font-semibold mb-4">Wind Direction</h3>
-                    <div class="compass">
-                        <div class="compass-ring"></div>
-                        
-                        <!-- Cardinal directions -->
-                        <span class="cardinal n">N</span>
-                        <span class="cardinal e">E</span>
-                        <span class="cardinal s">S</span>
-                        <span class="cardinal w">W</span>
-                        
-                        <!-- Needle -->
-                        <div id="compassArrow" class="compass-needle"></div>
-                        
-                        <!-- Center pivot -->
-                        <div class="compass-center"></div>
-                        
-                        <!-- Direction label -->
-                        <div id="compassDirection" class="compass-direction">NE</div>
+                <!-- Wind Compass Section -->
+                <div class="mt-8">
+                    <h3 class="text-lg font-semibold mb-4 text-center">Wind Direction</h3>
+
+                    <div class="flex flex-col md:flex-row items-center justify-center gap-6">
+
+                        <!-- LEFT : Sunrise / Sunset -->
+                        <div class="glass-card px-4 py-3 w-44 text-center">
+                            <div class="text-sm opacity-80 mb-2">Today</div>
+
+                            <div class="flex items-center justify-center mb-2">
+                                <i class="fas fa-sun text-yellow-300 mr-2"></i>
+                                <span class="text-sm">Sunrise</span>
+                            </div>
+                            <div id="sunriseTime" class="font-semibold">--:--</div>
+
+                            <div class="flex items-center justify-center mt-3 mb-1">
+                                <i class="fas fa-moon text-indigo-300 mr-2"></i>
+                                <span class="text-sm">Sunset</span>
+                            </div>
+                            <div id="sunsetTime" class="font-semibold">--:--</div>
+                        </div>
+
+                        <!-- CENTER : Compass -->
+                        <div class="flex flex-col items-center">
+                            <div class="compass">
+                                <div class="compass-ring"></div>
+
+                                <span class="cardinal n">N</span>
+                                <span class="cardinal e">E</span>
+                                <span class="cardinal s">S</span>
+                                <span class="cardinal w">W</span>
+
+                                <div id="compassArrow" class="compass-needle"></div>
+                                <div class="compass-center"></div>
+
+                                <div id="compassDirection" class="compass-direction">NE</div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT : Rain / Thunder -->
+                        <div class="glass-card px-4 py-3 w-44 text-center">
+                            <div class="text-sm opacity-80 mb-2">Precipitation</div>
+
+                            <div class="flex items-center justify-center mb-2">
+                                <i class="fas fa-cloud-rain text-blue-300 mr-2"></i>
+                                <span class="text-sm">Rain</span>
+                            </div>
+                            <div id="rainChance" class="font-semibold">--%</div>
+
+                            <div class="flex items-center justify-center mt-3 mb-1">
+                                <i class="fas fa-bolt text-yellow-400 mr-2"></i>
+                                <span class="text-sm">Thunder</span>
+                            </div>
+                            <div id="thunderChance" class="font-semibold">--%</div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -744,7 +781,12 @@
                 attributionBtn: document.getElementById('attributionBtn'),
                 settingsBtn: document.getElementById('settingsBtn'),
                 celsiusBtn: document.getElementById('celsiusBtn'),
-                fahrenheitBtn: document.getElementById('fahrenheitBtn')
+                fahrenheitBtn: document.getElementById('fahrenheitBtn'),
+                // New elements for wind compass section
+                sunriseTime: document.getElementById('sunriseTime'),
+                sunsetTime: document.getElementById('sunsetTime'),
+                rainChance: document.getElementById('rainChance'),
+                thunderChance: document.getElementById('thunderChance')
             };
             
             // State Management
@@ -1196,7 +1238,7 @@
                 fetchAirQualityData();
             }
             
-            // Fetch weather data from Open-Meteo
+            // Fetch weather data from Open-Meteo - UPDATED to include sunrise/sunset and precipitation
             async function fetchWeatherData() {
                 if (!appState.currentLocation) return;
                 
@@ -1205,13 +1247,13 @@
                     elements.currentTemp.textContent = '--';
                     elements.conditionText.textContent = 'Loading...';
                     
-                    // Construct API URL with valid parameters
+                    // Construct API URL with valid parameters including sunrise/sunset
                     const params = new URLSearchParams({
                         latitude: appState.currentLocation.latitude,
                         longitude: appState.currentLocation.longitude,
                         current: 'temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,weather_code,is_day',
                         hourly: 'temperature_2m,weather_code',
-                        daily: 'temperature_2m_max,temperature_2m_min,uv_index_max',
+                        daily: 'temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset,precipitation_probability_max',
                         timezone: 'auto',
                         temperature_unit: appState.isCelsius ? 'celsius' : 'fahrenheit',
                         wind_speed_unit: 'kmh',
@@ -1238,6 +1280,7 @@
                     appState.currentTemperature = data.current.temperature_2m;
                     
                     updateWeatherUI();
+                    updateWindCompassSection(data.daily); // Update new wind compass section
                     generateAIAdvisory();
                     updateBackground();
                     
@@ -1254,6 +1297,7 @@
                         config.currentWeatherCode = cachedData.current.weather_code;
                         appState.currentTemperature = cachedData.current.temperature_2m;
                         updateWeatherUI();
+                        updateWindCompassSection(cachedData.daily); // Update with cached data
                         generateAIAdvisory();
                         updateBackground();
                         showToast('Using cached weather data');
@@ -1261,6 +1305,38 @@
                         showFallbackData();
                     }
                 }
+            }
+            
+            // Update the new wind compass section
+            function updateWindCompassSection(dailyData) {
+                if (!dailyData) return;
+                
+                // Sunrise & Sunset
+                if (dailyData.sunrise && dailyData.sunset && dailyData.sunrise.length > 0) {
+                    try {
+                        elements.sunriseTime.textContent = new Date(dailyData.sunrise[0])
+                            .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            
+                        elements.sunsetTime.textContent = new Date(dailyData.sunset[0])
+                            .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    } catch (error) {
+                        console.log('Error formatting sunrise/sunset times:', error);
+                        elements.sunriseTime.textContent = '--:--';
+                        elements.sunsetTime.textContent = '--:--';
+                    }
+                } else {
+                    elements.sunriseTime.textContent = '--:--';
+                    elements.sunsetTime.textContent = '--:--';
+                }
+                
+                // Rain & Thunder Probability
+                const rainProb = dailyData.precipitation_probability_max?.[0] ?? 0;
+                elements.rainChance.textContent = `${rainProb}%`;
+                
+                // Thunderstorm estimation (based on weather code)
+                elements.thunderChance.textContent =
+                    (config.currentWeatherCode >= 95) ? 'High' :
+                    (rainProb > 50 ? 'Medium' : 'Low');
             }
             
             // Cache weather data
@@ -1866,6 +1942,12 @@
                 
                 elements.uvIndex.textContent = '5.2';
                 elements.weatherIcon.textContent = config.isDay ? '⛅' : '🌙';
+                
+                // Update wind compass section with fallback data
+                elements.sunriseTime.textContent = '6:30 AM';
+                elements.sunsetTime.textContent = '6:45 PM';
+                elements.rainChance.textContent = '20%';
+                elements.thunderChance.textContent = 'Low';
                 
                 updateLocalTime();
                 updateWindDirection(180);
