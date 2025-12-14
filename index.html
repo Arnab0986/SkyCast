@@ -272,7 +272,7 @@
             100% { background-position: -200% 0; }
         }
         
-        /* Ad Container */
+        /* Ad Container - HIDDEN BY DEFAULT FOR ADSENSE COMPLIANCE */
         .ad-container {
             overflow: hidden;
             min-height: 100px;
@@ -282,6 +282,7 @@
             background: rgba(0, 0, 0, 0.2);
             border-radius: 12px;
             margin: 1rem 0;
+            display: none; /* Hidden until content loads */
         }
         
         /* Install PWA Button */
@@ -439,6 +440,173 @@
             width: 90%;
             max-width: 360px;
         }
+        
+        /* ===== NEW FEATURES STYLES ===== */
+        
+        /* Dynamic Weather Icons Animation */
+        .weather-icon-animated {
+            display: inline-block;
+            animation: weatherIconPulse 2s infinite alternate;
+        }
+        
+        @keyframes weatherIconPulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+        
+        .sun-animated {
+            animation: sunRotate 20s linear infinite;
+        }
+        
+        @keyframes sunRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .cloud-animated {
+            animation: cloudFloat 6s ease-in-out infinite alternate;
+        }
+        
+        @keyframes cloudFloat {
+            0% { transform: translateX(-5px); }
+            100% { transform: translateX(5px); }
+        }
+        
+        .rain-animated {
+            animation: rainDrip 1.5s linear infinite;
+            position: relative;
+        }
+        
+        @keyframes rainDrip {
+            0% { transform: translateY(0) scaleY(1); opacity: 0.7; }
+            100% { transform: translateY(10px) scaleY(0.8); opacity: 0.3; }
+        }
+        
+        .snow-animated {
+            animation: snowFall 3s linear infinite;
+        }
+        
+        @keyframes snowFall {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(15px) rotate(180deg); }
+        }
+        
+        .thunder-animated {
+            animation: thunderFlash 3s infinite;
+        }
+        
+        @keyframes thunderFlash {
+            0%, 90% { opacity: 1; }
+            95%, 100% { opacity: 0.3; }
+        }
+        
+        /* Chart Styles */
+        .chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+        }
+        
+        .chart-line {
+            fill: none;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        
+        .chart-point {
+            cursor: pointer;
+            transition: r 0.2s;
+        }
+        
+        .chart-point:hover {
+            r: 8;
+        }
+        
+        .chart-grid {
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 1;
+        }
+        
+        /* Dark/Light Mode Toggle */
+        .theme-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .theme-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f59e0b;
+        }
+        
+        .theme-toggle.dark::after {
+            content: '🌙';
+            transform: translateX(30px);
+        }
+        
+        .theme-toggle.light::after {
+            content: '☀️';
+            transform: translateX(0);
+        }
+        
+        /* Weather Alerts */
+        .weather-alert {
+            animation: alertPulse 2s infinite;
+            border-left: 4px solid #ef4444;
+        }
+        
+        @keyframes alertPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+        
+        .alert-critical {
+            border-left-color: #ef4444;
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.2), transparent);
+        }
+        
+        .alert-warning {
+            border-left-color: #f59e0b;
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.2), transparent);
+        }
+        
+        .alert-info {
+            border-left-color: #3b82f6;
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.2), transparent);
+        }
+        
+        /* Light Mode Colors */
+        .light-mode {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #1f2937;
+        }
+        
+        .light-mode .glass-card {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #1f2937;
+        }
+        
+        .light-mode .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.2) 25%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.2) 75%);
+        }
     </style>
 </head>
 <body>
@@ -451,12 +619,24 @@
         <header class="flex justify-between items-center mb-6">
             <div class="flex items-center space-x-2">
                 <h1 class="text-2xl font-bold flex items-center">
-                    <span class="mr-2">🌤️</span> SkyCast
+                    <span id="appLogo" class="mr-2">🌤️</span> SkyCast
                 </h1>
                 <span class="text-xs bg-blue-500/30 px-2 py-1 rounded-full">PWA</span>
+                
+                <!-- Weather Alert Badge (NEW) -->
+                <div id="weatherAlertBadge" class="hidden">
+                    <div class="flex items-center space-x-1 bg-red-500/20 text-red-300 px-2 py-1 rounded-full text-xs">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Alerts</span>
+                        <span id="alertCount" class="bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">0</span>
+                    </div>
+                </div>
             </div>
             
             <div class="flex items-center space-x-3">
+                <!-- Dark/Light Mode Toggle (NEW) -->
+                <div id="themeToggleSwitch" class="theme-toggle dark" title="Toggle theme"></div>
+                
                 <!-- Location Display -->
                 <div id="locationDisplay" class="glass-card px-4 py-2">
                     <div class="flex items-center space-x-2">
@@ -478,9 +658,44 @@
             </div>
         </header>
         
-        <!-- Top Banner Ad -->
+        <!-- Weather Alerts Banner (NEW) -->
+        <div id="weatherAlertsContainer" class="mb-6 hidden">
+            <div class="glass-card weather-alert alert-critical p-4">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-start space-x-3">
+                        <div class="text-2xl text-red-400">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-lg mb-1">Weather Alert</h3>
+                            <div id="alertMessage" class="text-sm opacity-90">No active alerts</div>
+                            <div id="alertDetails" class="text-xs opacity-70 mt-1"></div>
+                        </div>
+                    </div>
+                    <button id="closeAlertBtn" class="tts-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- REAL TEXT CONTENT SECTION (MANDATORY FOR ADSENSE) -->
+        <section class="glass-card p-6 mb-6">
+            <h2 class="text-xl font-bold mb-2">Live Weather Forecast</h2>
+            <p class="opacity-90 text-sm">
+                SkyCast provides real-time weather updates including temperature,
+                humidity, wind speed, UV index, air quality, and sunrise & sunset times
+                using reliable meteorological data sources.
+            </p>
+            <p class="opacity-80 text-sm mt-2">
+                Forecasts are updated automatically based on your location and include
+                AI-powered insights to help you plan your day safely.
+            </p>
+        </section>
+        
+        <!-- Top Banner Ad - HIDDEN BY DEFAULT -->
         <div class="mb-6">
-            <div class="ad-container">
+            <div class="ad-container" id="topAdContainer">
                 <!-- Display: Top Banner Ad (Your Slot ID: 8088747076) -->
                 <ins class="adsbygoogle"
                      style="display:block"
@@ -488,9 +703,7 @@
                      data-ad-slot="8088747076"
                      data-ad-format="auto"
                      data-full-width-responsive="true"></ins>
-                <script>
-                    (adsbygoogle = window.adsbygoogle || []).push({});
-                </script>
+                <!-- REMOVED inline script - will be called only after content loads -->
             </div>
         </div>
         
@@ -659,9 +872,27 @@
             </div>
         </section>
         
-        <!-- Inline Content Ad -->
+        <!-- Temperature & Precipitation Chart (NEW) -->
+        <section class="mb-8 hidden" id="chartsSection">
+            <div class="glass-card p-6">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-chart-line mr-2"></i>Weekly Trends
+                </h2>
+                <div class="flex space-x-4 mb-4">
+                    <button id="tempChartBtn" class="px-4 py-2 rounded-lg bg-blue-500/30 text-blue-300 font-medium text-sm transition-all hover:bg-blue-500/40 active">Temperature</button>
+                    <button id="rainChartBtn" class="px-4 py-2 rounded-lg bg-green-500/30 text-green-300 font-medium text-sm transition-all hover:bg-green-500/40">Precipitation</button>
+                    <button id="uvChartBtn" class="px-4 py-2 rounded-lg bg-yellow-500/30 text-yellow-300 font-medium text-sm transition-all hover:bg-yellow-500/40">UV Index</button>
+                </div>
+                <div class="chart-container">
+                    <svg id="weatherChart" width="100%" height="200"></svg>
+                </div>
+                <div id="chartLegend" class="flex justify-center space-x-6 mt-4 text-sm"></div>
+            </div>
+        </section>
+        
+        <!-- Inline Content Ad - HIDDEN BY DEFAULT -->
         <div class="mb-8">
-            <div class="ad-container">
+            <div class="ad-container" id="contentAdContainer">
                 <!-- Display: In-Article Ad (Your Slot ID: 7107672043) -->
                 <ins class="adsbygoogle"
                      style="display:block; text-align:center;"
@@ -669,9 +900,7 @@
                      data-ad-format="fluid"
                      data-ad-client="ca-pub-1866633787679432"
                      data-ad-slot="7107672043"></ins>
-                <script>
-                    (adsbygoogle = window.adsbygoogle || []).push({});
-                </script>
+                <!-- REMOVED inline script - will be called only after content loads -->
             </div>
         </div>
         
@@ -712,9 +941,9 @@
             </div>
         </section>
         
-        <!-- Mobile Banner Ad (Hidden on Desktop) -->
+        <!-- Mobile Banner Ad (Hidden on Desktop) - HIDDEN BY DEFAULT -->
         <div class="mb-8 md:hidden">
-            <div class="ad-container">
+            <div class="ad-container" id="mobileAdContainer">
                 <!-- Display: Mobile Banner Ad (Your Slot ID: 6324255179) -->
                 <ins class="adsbygoogle"
                      style="display:block"
@@ -722,17 +951,30 @@
                      data-ad-slot="6324255179"
                      data-ad-format="auto"
                      data-full-width-responsive="true"></ins>
-                <script>
-                    (adsbygoogle = window.adsbygoogle || []).push({});
-                </script>
+                <!-- REMOVED inline script - will be called only after content loads -->
             </div>
         </div>
         
-        <!-- Footer -->
+        <!-- Footer with Policy Links -->
         <footer class="text-center opacity-70 text-sm py-6">
             <div class="mb-4">
                 <p>SkyCast uses Open-Meteo APIs for accurate weather data</p>
                 <p class="mt-1">AI-powered forecasts provide personalized insights</p>
+            </div>
+            <div class="flex justify-center space-x-6 mb-4">
+                <!-- Policy Links (MANDATORY FOR ADSENSE) -->
+                <a href="/privacy-policy.html" class="opacity-80 hover:opacity-100 flex items-center">
+                    <i class="fas fa-shield-alt mr-1"></i> <span>Privacy</span>
+                </a>
+                <a href="/terms.html" class="opacity-80 hover:opacity-100 flex items-center">
+                    <i class="fas fa-file-contract mr-1"></i> <span>Terms</span>
+                </a>
+                <a href="/about.html" class="opacity-80 hover:opacity-100 flex items-center">
+                    <i class="fas fa-info-circle mr-1"></i> <span>About</span>
+                </a>
+                <a href="/contact.html" class="opacity-80 hover:opacity-100 flex items-center">
+                    <i class="fas fa-envelope mr-1"></i> <span>Contact</span>
+                </a>
             </div>
             <div class="flex justify-center space-x-6">
                 <button id="themeToggle" class="opacity-80 hover:opacity-100 flex items-center">
@@ -754,7 +996,7 @@
     
     <!-- JavaScript -->
     <script>
-        // SkyCast Weather PWA - Complete Version with AdSense Integration
+        // SkyCast Weather PWA - AdSense Compliant Version
         document.addEventListener('DOMContentLoaded', () => {
             // App Configuration
             const config = {
@@ -814,7 +1056,26 @@
                 sunriseTime: document.getElementById('sunriseTime'),
                 sunsetTime: document.getElementById('sunsetTime'),
                 rainChance: document.getElementById('rainChance'),
-                thunderChance: document.getElementById('thunderChance')
+                thunderChance: document.getElementById('thunderChance'),
+                // NEW: Feature elements
+                weatherAlertBadge: document.getElementById('weatherAlertBadge'),
+                alertCount: document.getElementById('alertCount'),
+                weatherAlertsContainer: document.getElementById('weatherAlertsContainer'),
+                alertMessage: document.getElementById('alertMessage'),
+                alertDetails: document.getElementById('alertDetails'),
+                closeAlertBtn: document.getElementById('closeAlertBtn'),
+                themeToggleSwitch: document.getElementById('themeToggleSwitch'),
+                chartsSection: document.getElementById('chartsSection'),
+                weatherChart: document.getElementById('weatherChart'),
+                tempChartBtn: document.getElementById('tempChartBtn'),
+                rainChartBtn: document.getElementById('rainChartBtn'),
+                uvChartBtn: document.getElementById('uvChartBtn'),
+                chartLegend: document.getElementById('chartLegend'),
+                appLogo: document.getElementById('appLogo'),
+                // Ad containers
+                topAdContainer: document.getElementById('topAdContainer'),
+                contentAdContainer: document.getElementById('contentAdContainer'),
+                mobileAdContainer: document.getElementById('mobileAdContainer')
             };
             
             // State Management
@@ -830,35 +1091,158 @@
                 useGeolocation: true,
                 userLocation: null,
                 currentTemperature: null,
-                adsInitialized: false
+                adsInitialized: false, // Track if ads have been shown
+                activeAlerts: [],
+                currentChartType: 'temperature',
+                hasRealContentLoaded: false // Track if we have real content
             };
             
-            // Weather Code to Description Mapping (Open-Meteo)
+            // Weather Code to Description Mapping (Open-Meteo) - ENHANCED with animations
             const weatherCodes = {
-                0: { day: 'Clear sky', night: 'Clear sky', icon: { day: '☀️', night: '🌙' } },
-                1: { day: 'Mainly clear', night: 'Mainly clear', icon: { day: '🌤️', night: '🌙' } },
-                2: { day: 'Partly cloudy', night: 'Partly cloudy', icon: { day: '⛅', night: '☁️' } },
-                3: { day: 'Overcast', night: 'Overcast', icon: { day: '☁️', night: '☁️' } },
-                45: { day: 'Foggy', night: 'Foggy', icon: { day: '🌫️', night: '🌫️' } },
-                48: { day: 'Depositing rime fog', night: 'Depositing rime fog', icon: { day: '🌫️', night: '🌫️' } },
-                51: { day: 'Light drizzle', night: 'Light drizzle', icon: { day: '🌦️', night: '🌧️' } },
-                53: { day: 'Moderate drizzle', night: 'Moderate drizzle', icon: { day: '🌧️', night: '🌧️' } },
-                55: { day: 'Dense drizzle', night: 'Dense drizzle', icon: { day: '🌧️', night: '🌧️' } },
-                61: { day: 'Slight rain', night: 'Slight rain', icon: { day: '🌧️', night: '🌧️' } },
-                63: { day: 'Moderate rain', night: 'Moderate rain', icon: { day: '🌧️', night: '🌧️' } },
-                65: { day: 'Heavy rain', night: 'Heavy rain', icon: { day: '🌧️', night: '🌧️' } },
-                71: { day: 'Slight snow', night: 'Slight snow', icon: { day: '❄️', night: '❄️' } },
-                73: { day: 'Moderate snow', night: 'Moderate snow', icon: { day: '❄️', night: '❄️' } },
-                75: { day: 'Heavy snow', night: 'Heavy snow', icon: { day: '❄️', night: '❄️' } },
-                77: { day: 'Snow grains', night: 'Snow grains', icon: { day: '❄️', night: '❄️' } },
-                80: { day: 'Slight rain showers', night: 'Slight rain showers', icon: { day: '🌦️', night: '🌧️' } },
-                81: { day: 'Moderate rain showers', night: 'Moderate rain showers', icon: { day: '🌧️', night: '🌧️' } },
-                82: { day: 'Violent rain showers', night: 'Violent rain showers', icon: { day: '⛈️', night: '⛈️' } },
-                85: { day: 'Slight snow showers', night: 'Slight snow showers', icon: { day: '🌨️', night: '🌨️' } },
-                86: { day: 'Heavy snow showers', night: 'Heavy snow showers', icon: { day: '🌨️', night: '🌨️' } },
-                95: { day: 'Thunderstorm', night: 'Thunderstorm', icon: { day: '⛈️', night: '⛈️' } },
-                96: { day: 'Thunderstorm with hail', night: 'Thunderstorm with hail', icon: { day: '⛈️', night: '⛈️' } },
-                99: { day: 'Heavy thunderstorm with hail', night: 'Heavy thunderstorm with hail', icon: { day: '⛈️', night: '⛈️' } }
+                0: { 
+                    day: 'Clear sky', 
+                    night: 'Clear sky', 
+                    icon: { day: '☀️', night: '🌙' },
+                    animation: 'sun-animated'
+                },
+                1: { 
+                    day: 'Mainly clear', 
+                    night: 'Mainly clear', 
+                    icon: { day: '🌤️', night: '🌙' },
+                    animation: 'cloud-animated'
+                },
+                2: { 
+                    day: 'Partly cloudy', 
+                    night: 'Partly cloudy', 
+                    icon: { day: '⛅', night: '☁️' },
+                    animation: 'cloud-animated'
+                },
+                3: { 
+                    day: 'Overcast', 
+                    night: 'Overcast', 
+                    icon: { day: '☁️', night: '☁️' },
+                    animation: 'cloud-animated'
+                },
+                45: { 
+                    day: 'Foggy', 
+                    night: 'Foggy', 
+                    icon: { day: '🌫️', night: '🌫️' },
+                    animation: 'weather-icon-animated'
+                },
+                48: { 
+                    day: 'Depositing rime fog', 
+                    night: 'Depositing rime fog', 
+                    icon: { day: '🌫️', night: '🌫️' },
+                    animation: 'weather-icon-animated'
+                },
+                51: { 
+                    day: 'Light drizzle', 
+                    night: 'Light drizzle', 
+                    icon: { day: '🌦️', night: '🌧️' },
+                    animation: 'rain-animated'
+                },
+                53: { 
+                    day: 'Moderate drizzle', 
+                    night: 'Moderate drizzle', 
+                    icon: { day: '🌧️', night: '🌧️' },
+                    animation: 'rain-animated'
+                },
+                55: { 
+                    day: 'Dense drizzle', 
+                    night: 'Dense drizzle', 
+                    icon: { day: '🌧️', night: '🌧️' },
+                    animation: 'rain-animated'
+                },
+                61: { 
+                    day: 'Slight rain', 
+                    night: 'Slight rain', 
+                    icon: { day: '🌧️', night: '🌧️' },
+                    animation: 'rain-animated'
+                },
+                63: { 
+                    day: 'Moderate rain', 
+                    night: 'Moderate rain', 
+                    icon: { day: '🌧️', night: '🌧️' },
+                    animation: 'rain-animated'
+                },
+                65: { 
+                    day: 'Heavy rain', 
+                    night: 'Heavy rain', 
+                    icon: { day: '🌧️', night: '🌧️' },
+                    animation: 'rain-animated'
+                },
+                71: { 
+                    day: 'Slight snow', 
+                    night: 'Slight snow', 
+                    icon: { day: '❄️', night: '❄️' },
+                    animation: 'snow-animated'
+                },
+                73: { 
+                    day: 'Moderate snow', 
+                    night: 'Moderate snow', 
+                    icon: { day: '❄️', night: '❄️' },
+                    animation: 'snow-animated'
+                },
+                75: { 
+                    day: 'Heavy snow', 
+                    night: 'Heavy snow', 
+                    icon: { day: '❄️', night: '❄️' },
+                    animation: 'snow-animated'
+                },
+                77: { 
+                    day: 'Snow grains', 
+                    night: 'Snow grains', 
+                    icon: { day: '❄️', night: '❄️' },
+                    animation: 'snow-animated'
+                },
+                80: { 
+                    day: 'Slight rain showers', 
+                    night: 'Slight rain showers', 
+                    icon: { day: '🌦️', night: '🌧️' },
+                    animation: 'rain-animated'
+                },
+                81: { 
+                    day: 'Moderate rain showers', 
+                    night: 'Moderate rain showers', 
+                    icon: { day: '🌧️', night: '🌧️' },
+                    animation: 'rain-animated'
+                },
+                82: { 
+                    day: 'Violent rain showers', 
+                    night: 'Violent rain showers', 
+                    icon: { day: '⛈️', night: '⛈️' },
+                    animation: 'thunder-animated'
+                },
+                85: { 
+                    day: 'Slight snow showers', 
+                    night: 'Slight snow showers', 
+                    icon: { day: '🌨️', night: '🌨️' },
+                    animation: 'snow-animated'
+                },
+                86: { 
+                    day: 'Heavy snow showers', 
+                    night: 'Heavy snow showers', 
+                    icon: { day: '🌨️', night: '🌨️' },
+                    animation: 'snow-animated'
+                },
+                95: { 
+                    day: 'Thunderstorm', 
+                    night: 'Thunderstorm', 
+                    icon: { day: '⛈️', night: '⛈️' },
+                    animation: 'thunder-animated'
+                },
+                96: { 
+                    day: 'Thunderstorm with hail', 
+                    night: 'Thunderstorm with hail', 
+                    icon: { day: '⛈️', night: '⛈️' },
+                    animation: 'thunder-animated'
+                },
+                99: { 
+                    day: 'Heavy thunderstorm with hail', 
+                    night: 'Heavy thunderstorm with hail', 
+                    icon: { day: '⛈️', night: '⛈️' },
+                    animation: 'thunder-animated'
+                }
             };
             
             // Wind Direction Mapping
@@ -886,12 +1270,11 @@
             function initApp() {
                 setupEventListeners();
                 setupPWA();
-                setupAdSense();
-                loadPreferences();
                 detectLocation();
+                loadPreferences();
             }
             
-            // Set up event listeners
+            // Set up event listeners - ENHANCED with new features
             function setupEventListeners() {
                 elements.refreshBtn.addEventListener('click', refreshWeather);
                 elements.speakAdvisory.addEventListener('click', speakAdvisory);
@@ -900,6 +1283,19 @@
                 elements.settingsBtn.addEventListener('click', showSettings);
                 elements.celsiusBtn.addEventListener('click', () => setTemperatureUnit(true));
                 elements.fahrenheitBtn.addEventListener('click', () => setTemperatureUnit(false));
+                
+                // NEW: Weather alert close button
+                elements.closeAlertBtn.addEventListener('click', () => {
+                    elements.weatherAlertsContainer.classList.add('hidden');
+                });
+                
+                // NEW: Theme toggle switch
+                elements.themeToggleSwitch.addEventListener('click', toggleThemeSwitch);
+                
+                // NEW: Chart buttons
+                elements.tempChartBtn.addEventListener('click', () => switchChartType('temperature'));
+                elements.rainChartBtn.addEventListener('click', () => switchChartType('precipitation'));
+                elements.uvChartBtn.addEventListener('click', () => switchChartType('uv'));
                 
                 // Listen for beforeinstallprompt event
                 window.addEventListener('beforeinstallprompt', (e) => {
@@ -914,13 +1310,14 @@
                 window.addEventListener('online', () => {
                     showToast('Back online. Updating weather...');
                     refreshWeather();
-                    // Refresh ads when back online
-                    refreshAds();
                 });
                 
                 window.addEventListener('offline', () => {
                     showToast('You are offline. Using cached data.');
                 });
+                
+                // Check for severe weather periodically
+                setInterval(checkForSevereWeather, 300000); // Every 5 minutes
             }
             
             // Set up PWA functionality
@@ -942,109 +1339,95 @@
                 }
             }
             
-            // Set up Google AdSense with enhanced functionality
-            function setupAdSense() {
-                console.log('Initializing AdSense with your IDs...');
-                console.log('Client ID:', config.adSenseConfig.clientId);
-                console.log('Top Banner Slot:', config.adSenseConfig.topBannerSlot);
-                console.log('Mobile Banner Slot:', config.adSenseConfig.mobileBannerSlot);
-                console.log('Content Ad Slot:', config.adSenseConfig.contentAdSlot);
+            // ADSENSE COMPLIANCE: Show ads only after real content is loaded
+            function showAdsSafely() {
+                // Don't show ads more than once
+                if (appState.adsInitialized) return;
                 
-                // Check if AdSense script is loaded
-                if (window.adsbygoogle) {
-                    initializeAds();
-                } else {
-                    // Wait for script to load
-                    const checkAdSense = setInterval(() => {
-                        if (window.adsbygoogle) {
-                            clearInterval(checkAdSense);
-                            initializeAds();
-                        }
-                    }, 100);
-                    
-                    // Fallback after 5 seconds
-                    setTimeout(() => {
-                        if (!appState.adsInitialized) {
-                            clearInterval(checkAdSense);
-                            console.log('AdSense script not loaded, showing placeholders');
-                            showAdPlaceholders();
-                        }
-                    }, 5000);
+                // Critical check: Require real weather data AND city data
+                if (!appState.weatherData || !appState.cityData) {
+                    console.log('Ads delayed: Waiting for weather data');
+                    return false;
                 }
-            }
-            
-            function initializeAds() {
+                
+                // Additional safety: Require AI forecast text to be populated (real content)
+                const aiForecastText = elements.aiForecastText.textContent;
+                if (!aiForecastText || aiForecastText.includes('Loading') || aiForecastText.includes('skeleton')) {
+                    console.log('Ads delayed: Waiting for AI forecast content');
+                    return false;
+                }
+                
+                // Don't show ads in loading/error states
+                if (elements.cityName.textContent.includes('Detecting') || 
+                    elements.currentTemp.textContent === '--') {
+                    console.log('Ads delayed: Still in loading state');
+                    return false;
+                }
+                
+                // Don't show ads if modal is open
+                if (document.querySelector('.day-modal')) {
+                    console.log('Ads delayed: Modal is open');
+                    return false;
+                }
+                
+                // Don't show ads if offline
+                if (!navigator.onLine) {
+                    console.log('Ads delayed: Offline');
+                    return false;
+                }
+                
+                // All checks passed - show ads
+                console.log('All conditions met, showing ads safely');
+                
+                // Show ad containers
+                const adContainers = document.querySelectorAll('.ad-container');
+                adContainers.forEach(container => {
+                    container.style.display = 'flex';
+                });
+                
+                // Initialize AdSense ads
                 try {
-                    // Push all ads
-                    (adsbygoogle = window.adsbygoogle || []).push({});
-                    appState.adsInitialized = true;
-                    
-                    // Monitor ad loading
-                    monitorAds();
-                    
-                    console.log('AdSense initialized successfully');
-                    
+                    if (window.adsbygoogle) {
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                        appState.adsInitialized = true;
+                        console.log('AdSense ads loaded successfully');
+                        
+                        // Monitor ad loading
+                        setTimeout(() => {
+                            const ads = document.querySelectorAll('.adsbygoogle');
+                            let loadedCount = 0;
+                            
+                            ads.forEach((ad, index) => {
+                                if (ad.getAttribute('data-adsbygoogle-status') === 'done') {
+                                    loadedCount++;
+                                }
+                            });
+                            
+                            console.log(`${loadedCount}/${ads.length} ads loaded`);
+                            
+                            if (loadedCount === 0) {
+                                showAdPlaceholders();
+                            }
+                        }, 3000);
+                    } else {
+                        console.log('AdSense script not loaded');
+                        showAdPlaceholders();
+                    }
                 } catch (error) {
                     console.error('AdSense initialization error:', error);
                     showAdPlaceholders();
                 }
-            }
-            
-            function monitorAds() {
-                setTimeout(() => {
-                    const ads = document.querySelectorAll('.adsbygoogle');
-                    let loadedCount = 0;
-                    
-                    ads.forEach((ad, index) => {
-                        if (ad.getAttribute('data-adsbygoogle-status') === 'done') {
-                            loadedCount++;
-                            console.log(`Ad ${index + 1} loaded successfully`);
-                        } else {
-                            console.log(`Ad ${index + 1} still loading...`);
-                            // Try to reload failed ads
-                            (adsbygoogle = window.adsbygoogle || []).push({});
-                        }
-                    });
-                    
-                    console.log(`${loadedCount}/${ads.length} ads loaded`);
-                    
-                    if (loadedCount === 0) {
-                        showAdPlaceholders();
-                    }
-                    
-                }, 3000);
-            }
-            
-            function refreshAds() {
-                if (!appState.adsInitialized) return;
                 
-                try {
-                    console.log('Refreshing ads...');
-                    // Destroy existing ads
-                    const ads = document.querySelectorAll('.adsbygoogle');
-                    ads.forEach(ad => {
-                        if (ad.innerHTML) {
-                            ad.innerHTML = '';
-                        }
-                    });
-                    
-                    // Re-initialize ads
-                    setTimeout(() => {
-                        (adsbygoogle = window.adsbygoogle || []).push({});
-                    }, 1000);
-                    
-                } catch (error) {
-                    console.log('Error refreshing ads:', error);
-                }
+                return true;
             }
             
             function showAdPlaceholders() {
                 const adContainers = document.querySelectorAll('.ad-container');
                 
                 adContainers.forEach(container => {
-                    if (!container.querySelector('.ad-placeholder') && !container.querySelector('ins[data-ad-status="filled"]')) {
+                    if (!container.querySelector('.ad-placeholder')) {
                         const placeholder = document.createElement('div');
-                        placeholder.className = 'ad-placeholder text-center text-gray-300 p-4';
+                        placeholder.className = 'ad-placeholder text-center text-gray-300 p-4 w-full';
                         placeholder.innerHTML = `
                             <div class="mb-2">
                                 <i class="fas fa-ad text-2xl text-yellow-400"></i>
@@ -1052,7 +1435,7 @@
                                 <i class="fas fa-ad text-2xl text-green-400"></i>
                             </div>
                             <p class="text-sm mb-2">SkyCast is supported by ads</p>
-                            <p class="text-xs opacity-70">Ad loading...</p>
+                            <p class="text-xs opacity-70">Weather forecasts powered by Open-Meteo</p>
                         `;
                         container.appendChild(placeholder);
                     }
@@ -1068,17 +1451,51 @@
                         appState.isCelsius = prefs.isCelsius !== false;
                         appState.isDarkMode = prefs.isDarkMode !== false;
                         
+                        // Apply theme
+                        applyTheme(appState.isDarkMode);
+                        
                         // Update UI
                         setTemperatureUnit(appState.isCelsius);
-                        if (!appState.isDarkMode) {
-                            document.body.classList.remove('bg-gray-900');
-                            document.body.classList.add('bg-gray-100');
-                            elements.themeToggle.innerHTML = '<i class="fas fa-sun mr-1"></i> <span>Theme</span>';
-                        }
                     }
                 } catch (e) {
                     console.log('Error loading preferences:', e);
                 }
+            }
+            
+            // Apply theme to the entire app
+            function applyTheme(isDarkMode) {
+                appState.isDarkMode = isDarkMode;
+                
+                if (isDarkMode) {
+                    document.body.classList.remove('light-mode');
+                    document.body.style.background = '#0f172a';
+                    elements.themeToggleSwitch.className = 'theme-toggle dark';
+                    elements.themeToggle.innerHTML = '<i class="fas fa-moon mr-1"></i> <span>Dark</span>';
+                } else {
+                    document.body.classList.add('light-mode');
+                    document.body.style.background = '';
+                    elements.themeToggleSwitch.className = 'theme-toggle light';
+                    elements.themeToggle.innerHTML = '<i class="fas fa-sun mr-1"></i> <span>Light</span>';
+                }
+                
+                // Update all glass cards for light mode
+                const glassCards = document.querySelectorAll('.glass-card');
+                glassCards.forEach(card => {
+                    if (isDarkMode) {
+                        card.style.background = 'rgba(255, 255, 255, 0.1)';
+                        card.style.color = '#fff';
+                    } else {
+                        card.style.background = 'rgba(255, 255, 255, 0.15)';
+                        card.style.color = '#1f2937';
+                    }
+                });
+            }
+            
+            // NEW: Toggle theme switch
+            function toggleThemeSwitch() {
+                const newThemeState = !appState.isDarkMode;
+                applyTheme(newThemeState);
+                savePreferences();
             }
             
             // Save user preferences to localStorage
@@ -1308,12 +1725,23 @@
                     appState.currentTemperature = data.current.temperature_2m;
                     
                     updateWeatherUI();
-                    updateWindCompassSection(data.daily); // Update new wind compass section
+                    updateWindCompassSection(data.daily);
                     generateAIAdvisory();
                     updateBackground();
                     
+                    // NEW: Update charts
+                    updateWeatherCharts(data.daily);
+                    
+                    // NEW: Check for severe weather
+                    checkForSevereWeather(data.daily);
+                    
                     // Cache weather data
                     cacheWeatherData(data);
+                    
+                    // ADSENSE COMPLIANCE: Try to show ads after weather data loads
+                    setTimeout(() => {
+                        showAdsSafely();
+                    }, 1000);
                     
                 } catch (error) {
                     console.error('Error fetching weather:', error);
@@ -1325,10 +1753,16 @@
                         config.currentWeatherCode = cachedData.current.weather_code;
                         appState.currentTemperature = cachedData.current.temperature_2m;
                         updateWeatherUI();
-                        updateWindCompassSection(cachedData.daily); // Update with cached data
+                        updateWindCompassSection(cachedData.daily);
                         generateAIAdvisory();
                         updateBackground();
+                        updateWeatherCharts(cachedData.daily);
                         showToast('Using cached weather data');
+                        
+                        // ADSENSE COMPLIANCE: Try to show ads with cached data
+                        setTimeout(() => {
+                            showAdsSafely();
+                        }, 1000);
                     } else {
                         showFallbackData();
                     }
@@ -1474,7 +1908,7 @@
                 return null;
             }
             
-            // Update weather UI with fetched data - FIXED TEMPERATURE DISPLAY
+            // Update weather UI with fetched data - ENHANCED with animated icons
             function updateWeatherUI() {
                 if (!appState.weatherData) return;
                 
@@ -1482,7 +1916,7 @@
                 const hourly = appState.weatherData.hourly;
                 const daily = appState.weatherData.daily;
                 
-                // FIXED: Update current weather with proper unit conversion
+                // Update current weather with proper unit conversion
                 let tempValue = Math.round(current.temperature_2m);
                 if (!appState.isCelsius) {
                     // Convert to Fahrenheit if needed
@@ -1492,7 +1926,7 @@
                 
                 elements.humidity.textContent = `${Math.round(current.relative_humidity_2m)}%`;
                 
-                // FIXED: Wind speed unit conversion
+                // Wind speed unit conversion
                 let windValue = Math.round(current.wind_speed_10m);
                 if (!config.useMetric) {
                     windValue = Math.round(current.wind_speed_10m * 0.621371);
@@ -1509,7 +1943,7 @@
                 // Update wind direction compass
                 updateWindDirection(current.wind_direction_10m);
                 
-                // Update weather condition
+                // Update weather condition with animated icon
                 updateWeatherCondition(current.weather_code, config.isDay);
                 
                 // Update local time
@@ -1518,21 +1952,36 @@
                 // Update hourly forecast
                 updateHourlyForecast(hourly);
                 
-                // Update weekly forecast - USING NEW VERSION
+                // Update weekly forecast
                 updateWeeklyForecastNew(daily);
+                
+                // Mark that real content is now loaded
+                appState.hasRealContentLoaded = true;
             }
             
-            // Update weather condition text and icon
+            // Update weather condition text and icon - ENHANCED with animations
             function updateWeatherCondition(weatherCode, isDay) {
                 const condition = weatherCodes[weatherCode] || { 
                     day: 'Unknown', 
                     night: 'Unknown', 
-                    icon: { day: '🌤️', night: '🌙' } 
+                    icon: { day: '🌤️', night: '🌙' },
+                    animation: 'weather-icon-animated'
                 };
                 
                 const timeOfDay = isDay ? 'day' : 'night';
                 elements.conditionText.textContent = condition[timeOfDay] || condition.day;
-                elements.weatherIcon.textContent = condition.icon[timeOfDay] || condition.icon.day;
+                
+                // Apply animated icon with animation class
+                const animationClass = condition.animation || 'weather-icon-animated';
+                const icon = condition.icon[timeOfDay] || condition.icon.day;
+                
+                // Remove any existing animation classes
+                elements.weatherIcon.className = 'text-6xl mr-4 ' + animationClass;
+                elements.weatherIcon.textContent = icon;
+                
+                // Also update app logo with animation
+                elements.appLogo.className = 'mr-2 ' + animationClass;
+                elements.appLogo.textContent = icon;
                 
                 config.currentWeatherCode = weatherCode;
                 config.isDay = isDay;
@@ -1596,8 +2045,9 @@
                     hourElement.className = 'flex flex-col items-center justify-center min-w-16 p-3 rounded-xl bg-white/5 mr-4 flex-shrink-0';
                     
                     const isDayHour = hour >= 6 && hour < 18;
-                    const condition = weatherCodes[weatherCode] || { icon: { day: '🌤️', night: '🌙' } };
+                    const condition = weatherCodes[weatherCode] || { icon: { day: '🌤️', night: '🌙' }, animation: 'weather-icon-animated' };
                     const icon = isDayHour ? condition.icon.day : condition.icon.night;
+                    const animationClass = condition.animation || 'weather-icon-animated';
                     
                     // Format hour display
                     let hourDisplay;
@@ -1613,7 +2063,7 @@
                     
                     hourElement.innerHTML = `
                         <div class="font-medium text-sm">${hourDisplay}</div>
-                        <div class="text-2xl my-2">${icon}</div>
+                        <div class="text-2xl my-2 ${animationClass}">${icon}</div>
                         <div class="font-bold text-lg">${hourTemp}°</div>
                     `;
                     
@@ -1621,7 +2071,7 @@
                 }
             }
             
-            // NEW: Update weekly forecast with separate cards and popups
+            // Update weekly forecast with separate cards and popups
             function updateWeeklyForecastNew(dailyData) {
                 if (!dailyData || !dailyData.time || !dailyData.temperature_2m_max || !dailyData.temperature_2m_min) {
                     elements.weeklyForecast.innerHTML = '<div class="text-center py-4 opacity-70">Weekly forecast unavailable</div>';
@@ -1698,7 +2148,7 @@
                 }
             }
             
-            // NEW: Show day details modal
+            // Show day details modal
             function showDayDetails(data) {
                 const modal = document.createElement('div');
                 modal.className = 'day-modal';
@@ -1731,6 +2181,367 @@
                 };
                 
                 document.body.appendChild(modal);
+            }
+            
+            // NEW: Update weather charts
+            function updateWeatherCharts(dailyData) {
+                if (!dailyData || dailyData.time.length < 2) {
+                    elements.chartsSection.classList.add('hidden');
+                    return;
+                }
+                
+                elements.chartsSection.classList.remove('hidden');
+                renderChart(dailyData);
+            }
+            
+            // NEW: Render SVG chart
+            function renderChart(dailyData) {
+                const days = dailyData.time.slice(0, 7);
+                const maxTemps = dailyData.temperature_2m_max.slice(0, 7);
+                const minTemps = dailyData.temperature_2m_min.slice(0, 7);
+                const rainData = dailyData.precipitation_probability_max?.slice(0, 7) || Array(7).fill(0);
+                const uvData = dailyData.uv_index_max?.slice(0, 7) || Array(7).fill(0);
+                
+                const chartData = {
+                    temperature: { max: maxTemps, min: minTemps },
+                    precipitation: rainData,
+                    uv: uvData
+                };
+                
+                drawChart(days, chartData, appState.currentChartType);
+                
+                // Update chart buttons active state
+                elements.tempChartBtn.classList.remove('active');
+                elements.rainChartBtn.classList.remove('active');
+                elements.uvChartBtn.classList.remove('active');
+                
+                switch(appState.currentChartType) {
+                    case 'temperature':
+                        elements.tempChartBtn.classList.add('active');
+                        break;
+                    case 'precipitation':
+                        elements.rainChartBtn.classList.add('active');
+                        break;
+                    case 'uv':
+                        elements.uvChartBtn.classList.add('active');
+                        break;
+                }
+            }
+            
+            // NEW: Draw SVG chart
+            function drawChart(days, chartData, type) {
+                const svg = elements.weatherChart;
+                const width = svg.clientWidth || 600;
+                const height = 200;
+                const padding = { top: 20, right: 20, bottom: 30, left: 40 };
+                
+                svg.innerHTML = '';
+                svg.setAttribute('width', width);
+                svg.setAttribute('height', height);
+                svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+                
+                // Draw grid
+                for (let i = 0; i <= 4; i++) {
+                    const y = padding.top + (height - padding.top - padding.bottom) * (i / 4);
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('class', 'chart-grid');
+                    line.setAttribute('x1', padding.left);
+                    line.setAttribute('x2', width - padding.right);
+                    line.setAttribute('y1', y);
+                    line.setAttribute('y2', y);
+                    svg.appendChild(line);
+                }
+                
+                // Prepare data based on chart type
+                let data = [];
+                let yMin = 0, yMax = 0;
+                let color = '#3b82f6';
+                
+                switch(type) {
+                    case 'temperature':
+                        data = chartData.temperature.max.map((max, i) => ({
+                            value: max,
+                            min: chartData.temperature.min[i],
+                            label: new Date(days[i]).toLocaleDateString('en', { weekday: 'short' })
+                        }));
+                        yMin = Math.min(...chartData.temperature.min) - 5;
+                        yMax = Math.max(...chartData.temperature.max) + 5;
+                        color = '#ef4444';
+                        break;
+                    case 'precipitation':
+                        data = chartData.precipitation.map((value, i) => ({
+                            value: value,
+                            label: new Date(days[i]).toLocaleDateString('en', { weekday: 'short' })
+                        }));
+                        yMax = Math.max(...chartData.precipitation) + 10;
+                        color = '#3b82f6';
+                        break;
+                    case 'uv':
+                        data = chartData.uv.map((value, i) => ({
+                            value: value,
+                            label: new Date(days[i]).toLocaleDateString('en', { weekday: 'short' })
+                        }));
+                        yMax = Math.max(...chartData.uv) + 2;
+                        color = '#f59e0b';
+                        break;
+                }
+                
+                // Scale functions
+                const xScale = (index) => {
+                    return padding.left + (width - padding.left - padding.right) * (index / (data.length - 1));
+                };
+                
+                const yScale = (value) => {
+                    return height - padding.bottom - ((value - yMin) / (yMax - yMin)) * (height - padding.top - padding.bottom);
+                };
+                
+                // Draw line for main data
+                if (data.length > 1) {
+                    const pathData = data.map((d, i) => 
+                        `${i === 0 ? 'M' : 'L'} ${xScale(i)} ${yScale(d.value)}`
+                    ).join(' ');
+                    
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('class', 'chart-line');
+                    path.setAttribute('d', pathData);
+                    path.setAttribute('stroke', color);
+                    path.setAttribute('fill', 'none');
+                    svg.appendChild(path);
+                }
+                
+                // Draw min temperature line for temperature chart
+                if (type === 'temperature' && data.length > 1) {
+                    const minPathData = data.map((d, i) => 
+                        `${i === 0 ? 'M' : 'L'} ${xScale(i)} ${yScale(d.min)}`
+                    ).join(' ');
+                    
+                    const minPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    minPath.setAttribute('class', 'chart-line');
+                    minPath.setAttribute('d', minPathData);
+                    minPath.setAttribute('stroke', '#60a5fa');
+                    minPath.setAttribute('stroke-dasharray', '5,5');
+                    minPath.setAttribute('fill', 'none');
+                    svg.appendChild(minPath);
+                }
+                
+                // Draw points
+                data.forEach((d, i) => {
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('class', 'chart-point');
+                    circle.setAttribute('cx', xScale(i));
+                    circle.setAttribute('cy', yScale(d.value));
+                    circle.setAttribute('r', '5');
+                    circle.setAttribute('fill', color);
+                    circle.setAttribute('stroke', 'white');
+                    circle.setAttribute('stroke-width', '2');
+                    
+                    // Add tooltip
+                    const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                    title.textContent = `${d.label}: ${d.value}${type === 'temperature' ? '°' : type === 'precipitation' ? '%' : ''}`;
+                    if (type === 'temperature' && d.min !== undefined) {
+                        title.textContent += ` (Min: ${d.min}°)`;
+                    }
+                    circle.appendChild(title);
+                    
+                    svg.appendChild(circle);
+                    
+                    // Draw min temperature points for temperature chart
+                    if (type === 'temperature' && d.min !== undefined) {
+                        const minCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        minCircle.setAttribute('class', 'chart-point');
+                        minCircle.setAttribute('cx', xScale(i));
+                        minCircle.setAttribute('cy', yScale(d.min));
+                        minCircle.setAttribute('r', '4');
+                        minCircle.setAttribute('fill', '#60a5fa');
+                        minCircle.setAttribute('stroke', 'white');
+                        minCircle.setAttribute('stroke-width', '1');
+                        
+                        const minTitle = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                        minTitle.textContent = `${d.label}: Min ${d.min}°`;
+                        minCircle.appendChild(minTitle);
+                        
+                        svg.appendChild(minCircle);
+                    }
+                });
+                
+                // Draw labels
+                data.forEach((d, i) => {
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', xScale(i));
+                    text.setAttribute('y', height - 5);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('fill', appState.isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)');
+                    text.setAttribute('font-size', '10');
+                    text.textContent = d.label;
+                    svg.appendChild(text);
+                });
+                
+                // Update legend
+                updateChartLegend(type, color);
+            }
+            
+            // NEW: Update chart legend
+            function updateChartLegend(type, color) {
+                let legendHTML = '';
+                
+                switch(type) {
+                    case 'temperature':
+                        legendHTML = `
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                                <span>Max Temperature</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 rounded-full bg-blue-400 mr-2"></div>
+                                <span>Min Temperature</span>
+                            </div>
+                        `;
+                        break;
+                    case 'precipitation':
+                        legendHTML = `
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                                <span>Rain Probability (%)</span>
+                            </div>
+                        `;
+                        break;
+                    case 'uv':
+                        legendHTML = `
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
+                                <span>UV Index</span>
+                            </div>
+                        `;
+                        break;
+                }
+                
+                elements.chartLegend.innerHTML = legendHTML;
+            }
+            
+            // NEW: Switch chart type
+            function switchChartType(type) {
+                appState.currentChartType = type;
+                if (appState.weatherData && appState.weatherData.daily) {
+                    renderChart(appState.weatherData.daily);
+                }
+            }
+            
+            // NEW: Check for severe weather
+            function checkForSevereWeather(dailyData) {
+                if (!dailyData) return;
+                
+                appState.activeAlerts = [];
+                
+                // Check for extreme temperatures
+                const maxTemp = Math.max(...dailyData.temperature_2m_max.slice(0, 3));
+                const minTemp = Math.min(...dailyData.temperature_2m_min.slice(0, 3));
+                
+                if (maxTemp > 35) {
+                    appState.activeAlerts.push({
+                        type: 'warning',
+                        title: 'Heat Warning',
+                        message: `High temperature of ${Math.round(maxTemp)}°C expected. Stay hydrated and avoid direct sun exposure.`,
+                        severity: 'warning'
+                    });
+                }
+                
+                if (minTemp < 0) {
+                    appState.activeAlerts.push({
+                        type: 'warning',
+                        title: 'Freezing Warning',
+                        message: `Low temperature of ${Math.round(minTemp)}°C expected. Dress warmly and watch for icy conditions.`,
+                        severity: 'warning'
+                    });
+                }
+                
+                // Check for heavy rain
+                const rainProb = dailyData.precipitation_probability_max?.[0] || 0;
+                if (rainProb > 70) {
+                    appState.activeAlerts.push({
+                        type: 'warning',
+                        title: 'Heavy Rain Alert',
+                        message: `${rainProb}% chance of heavy rain today. Consider indoor activities.`,
+                        severity: 'warning'
+                    });
+                }
+                
+                // Check for thunderstorms
+                if (config.currentWeatherCode >= 95) {
+                    appState.activeAlerts.push({
+                        type: 'critical',
+                        title: 'Thunderstorm Alert',
+                        message: 'Thunderstorms expected. Stay indoors and avoid electrical appliances.',
+                        severity: 'critical'
+                    });
+                }
+                
+                // Check for high UV
+                const uvIndex = dailyData.uv_index_max?.[0] || 0;
+                if (uvIndex > 8) {
+                    appState.activeAlerts.push({
+                        type: 'warning',
+                        title: 'High UV Alert',
+                        message: `Extreme UV index of ${uvIndex.toFixed(1)}. Use sunscreen and seek shade.`,
+                        severity: 'warning'
+                    });
+                }
+                
+                // Check air quality
+                if (appState.airQualityData) {
+                    const pm25 = appState.airQualityData.current.pm2_5;
+                    if (pm25 > 55) {
+                        appState.activeAlerts.push({
+                            type: 'critical',
+                            title: 'Poor Air Quality',
+                            message: `PM2.5 level is ${pm25.toFixed(1)} μg/m³. Limit outdoor activities.`,
+                            severity: 'critical'
+                        });
+                    }
+                }
+                
+                // Update alert UI
+                updateAlertsUI();
+            }
+            
+            // NEW: Update alerts UI
+            function updateAlertsUI() {
+                if (appState.activeAlerts.length > 0) {
+                    elements.weatherAlertBadge.classList.remove('hidden');
+                    elements.alertCount.textContent = appState.activeAlerts.length;
+                    
+                    // Show the most severe alert
+                    const criticalAlerts = appState.activeAlerts.filter(a => a.severity === 'critical');
+                    const warningAlerts = appState.activeAlerts.filter(a => a.severity === 'warning');
+                    
+                    let displayAlert;
+                    if (criticalAlerts.length > 0) {
+                        displayAlert = criticalAlerts[0];
+                        elements.weatherAlertsContainer.className = 'mb-6';
+                        elements.weatherAlertsContainer.querySelector('.glass-card').className = 'glass-card weather-alert alert-critical p-4';
+                    } else if (warningAlerts.length > 0) {
+                        displayAlert = warningAlerts[0];
+                        elements.weatherAlertsContainer.className = 'mb-6';
+                        elements.weatherAlertsContainer.querySelector('.glass-card').className = 'glass-card weather-alert alert-warning p-4';
+                    }
+                    
+                    if (displayAlert) {
+                        elements.alertMessage.textContent = displayAlert.message;
+                        elements.alertDetails.textContent = displayAlert.title;
+                        elements.weatherAlertsContainer.classList.remove('hidden');
+                        
+                        // Speak alert if it's critical
+                        if (displayAlert.severity === 'critical' && appState.speechSynthesis) {
+                            const utterance = new SpeechSynthesisUtterance(
+                                `Weather alert: ${displayAlert.title}. ${displayAlert.message}`
+                            );
+                            utterance.rate = 0.9;
+                            appState.speechSynthesis.speak(utterance);
+                        }
+                    }
+                } else {
+                    elements.weatherAlertBadge.classList.add('hidden');
+                    elements.weatherAlertsContainer.classList.add('hidden');
+                }
             }
             
             // Update air quality UI
@@ -1777,7 +2588,7 @@
                 elements.airQualityAdvice.textContent = aqiText;
             }
             
-            // Generate AI advisory based on weather and air quality - UPDATED VERSION
+            // Generate AI advisory based on weather and air quality
             async function generateAIAdvisory() {
                 if (!appState.weatherData || !appState.cityData) return;
                 
@@ -1827,6 +2638,11 @@
                 
                 // Generate health advisory
                 generateHealthAdvisory(uvIndex, pm25, temperature, conditionText);
+                
+                // ADSENSE COMPLIANCE: AI forecast is real content - try to show ads after it loads
+                setTimeout(() => {
+                    showAdsSafely();
+                }, 500);
             }
             
             // Generate local AI advisory as fallback
@@ -2053,6 +2869,11 @@
                 
                 showFallbackForecasts();
                 showToast('Using fallback data - check connection');
+                
+                // ADSENSE COMPLIANCE: Even with fallback data, we have some content - try to show ads
+                setTimeout(() => {
+                    showAdsSafely();
+                }, 1000);
             }
             
             // Show fallback forecasts
@@ -2165,20 +2986,10 @@
                 appState.speechSynthesis.speak(utterance);
             }
             
-            // Toggle between light/dark theme
+            // Toggle between light/dark theme (old button)
             function toggleTheme() {
-                appState.isDarkMode = !appState.isDarkMode;
-                
-                if (appState.isDarkMode) {
-                    document.body.classList.add('bg-gray-900');
-                    document.body.classList.remove('bg-gray-100');
-                    elements.themeToggle.innerHTML = '<i class="fas fa-moon mr-1"></i> <span>Theme</span>';
-                } else {
-                    document.body.classList.remove('bg-gray-900');
-                    document.body.classList.add('bg-gray-100');
-                    elements.themeToggle.innerHTML = '<i class="fas fa-sun mr-1"></i> <span>Theme</span>';
-                }
-                
+                const newThemeState = !appState.isDarkMode;
+                applyTheme(newThemeState);
                 savePreferences();
             }
             
@@ -2214,6 +3025,7 @@
                 alert('Settings\n\n• Temperature Unit: ' + (appState.isCelsius ? 'Celsius' : 'Fahrenheit') + 
                       '\n• Theme: ' + (appState.isDarkMode ? 'Dark' : 'Light') +
                       '\n• Location: ' + (appState.useGeolocation ? 'GPS Enabled' : 'IP-based') +
+                      '\n• Alerts: ' + (appState.activeAlerts.length > 0 ? 'Active' : 'None') +
                       '\n• Ad Settings: Manage in browser settings' +
                       '\n\nTo change settings, use the buttons in the app.');
             }
