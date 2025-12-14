@@ -411,6 +411,34 @@
                 height: auto !important;
             }
         }
+        
+        /* Day Card & Modal Styles (NEW ADDITIONS) */
+        .day-card {
+            cursor: pointer;
+            transition: transform .25s ease, background .25s ease;
+        }
+        
+        .day-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255,255,255,0.12);
+        }
+        
+        /* Popup modal */
+        .day-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        
+        .day-modal-card {
+            width: 90%;
+            max-width: 360px;
+        }
     </style>
 </head>
 <body>
@@ -671,7 +699,7 @@
         <section class="mb-8">
             <div class="glass-card p-6">
                 <h2 class="text-xl font-bold mb-4">7-Day Forecast</h2>
-                <div id="weeklyForecast">
+                <div id="weeklyForecast" class="space-y-3">
                     <!-- Loading skeletons -->
                     <div class="flex justify-between items-center p-4 mb-3 rounded-xl bg-white/5">
                         <div class="skeleton h-4 w-16 rounded"></div>
@@ -1490,8 +1518,8 @@
                 // Update hourly forecast
                 updateHourlyForecast(hourly);
                 
-                // Update weekly forecast
-                updateWeeklyForecast(daily);
+                // Update weekly forecast - USING NEW VERSION
+                updateWeeklyForecastNew(daily);
             }
             
             // Update weather condition text and icon
@@ -1593,8 +1621,8 @@
                 }
             }
             
-            // Update weekly forecast with unit conversion
-            function updateWeeklyForecast(dailyData) {
+            // NEW: Update weekly forecast with separate cards and popups
+            function updateWeeklyForecastNew(dailyData) {
                 if (!dailyData || !dailyData.time || !dailyData.temperature_2m_max || !dailyData.temperature_2m_min) {
                     elements.weeklyForecast.innerHTML = '<div class="text-center py-4 opacity-70">Weekly forecast unavailable</div>';
                     return;
@@ -1602,39 +1630,107 @@
                 
                 elements.weeklyForecast.innerHTML = '';
                 
-                const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-                const today = new Date();
-                const todayDay = today.getDay();
+                const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+                const today = new Date().getDay();
                 
                 for (let i = 0; i < 7; i++) {
                     if (i >= dailyData.time.length) break;
                     
-                    const dayTime = new Date(dailyData.time[i]);
-                    const dayIndex = (todayDay + i) % 7;
-                    const dayName = i === 0 ? 'Today' : daysOfWeek[dayIndex];
+                    const date = new Date(dailyData.time[i]);
+                    const label = i === 0 ? 'Today' : days[date.getDay()];
                     
-                    let maxTemp = Math.round(dailyData.temperature_2m_max[i]);
-                    let minTemp = Math.round(dailyData.temperature_2m_min[i]);
+                    let max = Math.round(dailyData.temperature_2m_max[i]);
+                    let min = Math.round(dailyData.temperature_2m_min[i]);
                     
-                    // Convert temperatures if needed
+                    // Convert temperature if needed
                     if (!appState.isCelsius) {
-                        maxTemp = Math.round((maxTemp * 9/5) + 32);
-                        minTemp = Math.round((minTemp * 9/5) + 32);
+                        max = Math.round((max * 9/5) + 32);
+                        min = Math.round((min * 9/5) + 32);
                     }
                     
-                    const dayElement = document.createElement('div');
-                    dayElement.className = 'flex justify-between items-center p-4 mb-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors';
+                    const rain = dailyData.precipitation_probability_max?.[i] ?? 0;
                     
-                    dayElement.innerHTML = `
-                        <div class="font-medium">${dayName}</div>
-                        <div class="flex items-center">
-                            <div class="text-lg font-bold mr-6">${maxTemp}°</div>
-                            <div class="opacity-70">${minTemp}°</div>
+                    // Format sunrise/sunset times
+                    let sunrise = '--:--';
+                    let sunset = '--:--';
+                    if (dailyData.sunrise && dailyData.sunrise[i]) {
+                        try {
+                            sunrise = new Date(dailyData.sunrise[i])
+                                .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        } catch (e) {}
+                    }
+                    if (dailyData.sunset && dailyData.sunset[i]) {
+                        try {
+                            sunset = new Date(dailyData.sunset[i])
+                                .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        } catch (e) {}
+                    }
+                    
+                    const card = document.createElement('div');
+                    card.className = 'glass-card day-card p-4 flex justify-between items-center';
+                    
+                    card.innerHTML = `
+                        <div>
+                            <div class="font-medium">${label}</div>
+                            <div class="text-xs opacity-70">
+                                🌅 ${sunrise} • 🌇 ${sunset}
+                            </div>
+                        </div>
+                        
+                        <div class="text-right">
+                            <div class="font-bold text-lg">${max}°</div>
+                            <div class="text-sm opacity-70">${min}° • 🌧️ ${rain}%</div>
                         </div>
                     `;
                     
-                    elements.weeklyForecast.appendChild(dayElement);
+                    // Add click handler for modal popup
+                    card.onclick = () => showDayDetails({
+                        label, 
+                        max, 
+                        min, 
+                        rain, 
+                        sunrise, 
+                        sunset,
+                        uvIndex: dailyData.uv_index_max?.[i] || 0
+                    });
+                    
+                    elements.weeklyForecast.appendChild(card);
                 }
+            }
+            
+            // NEW: Show day details modal
+            function showDayDetails(data) {
+                const modal = document.createElement('div');
+                modal.className = 'day-modal';
+                
+                modal.innerHTML = `
+                    <div class="glass-card day-modal-card p-6">
+                        <h3 class="text-xl font-bold mb-3">${data.label}</h3>
+                        
+                        <div class="space-y-2 text-sm">
+                            <div>🌡️ Temperature: ${data.min}° – ${data.max}°</div>
+                            <div>🌅 Sunrise: ${data.sunrise}</div>
+                            <div>🌇 Sunset: ${data.sunset}</div>
+                            <div>🌧️ Rain Probability: ${data.rain}%</div>
+                            <div>⛈️ Thunderstorm Risk: ${
+                                data.rain > 60 ? 'High' : data.rain > 30 ? 'Medium' : 'Low'
+                            }</div>
+                            <div>☀️ UV Index: ${data.uvIndex.toFixed(1)}</div>
+                            <div>🌫️ Air Quality: Check daily AQI panel</div>
+                        </div>
+                        
+                        <button class="install-btn mt-5 w-full"
+                            onclick="this.closest('.day-modal').remove()">
+                            Close
+                        </button>
+                    </div>
+                `;
+                
+                modal.onclick = e => {
+                    if (e.target === modal) modal.remove();
+                };
+                
+                document.body.appendChild(modal);
             }
             
             // Update air quality UI
@@ -1986,11 +2082,12 @@
                     elements.hourlyForecast.appendChild(hourElement);
                 }
                 
-                // Weekly fallback
+                // Weekly fallback using NEW format
                 elements.weeklyForecast.innerHTML = '';
-                const days = ['Today', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
                 
                 for (let i = 0; i < 7; i++) {
+                    const label = i === 0 ? 'Today' : days[(new Date().getDay() + i) % 7];
                     let maxTemp = 22 + Math.sin(i) * 6;
                     let minTemp = maxTemp - 5;
                     
@@ -1999,18 +2096,36 @@
                         minTemp = Math.round((minTemp * 9/5) + 32);
                     }
                     
-                    const dayElement = document.createElement('div');
-                    dayElement.className = 'flex justify-between items-center p-4 mb-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors';
+                    const rainProb = Math.floor(Math.random() * 40);
                     
-                    dayElement.innerHTML = `
-                        <div class="font-medium">${days[i]}</div>
-                        <div class="flex items-center">
-                            <div class="text-lg font-bold mr-6">${Math.round(maxTemp)}°</div>
-                            <div class="opacity-70">${Math.round(minTemp)}°</div>
+                    const card = document.createElement('div');
+                    card.className = 'glass-card day-card p-4 flex justify-between items-center';
+                    
+                    card.innerHTML = `
+                        <div>
+                            <div class="font-medium">${label}</div>
+                            <div class="text-xs opacity-70">
+                                🌅 6:30 AM • 🌇 6:45 PM
+                            </div>
+                        </div>
+                        
+                        <div class="text-right">
+                            <div class="font-bold text-lg">${Math.round(maxTemp)}°</div>
+                            <div class="text-sm opacity-70">${Math.round(minTemp)}° • 🌧️ ${rainProb}%</div>
                         </div>
                     `;
                     
-                    elements.weeklyForecast.appendChild(dayElement);
+                    card.onclick = () => showDayDetails({
+                        label: label,
+                        max: Math.round(maxTemp),
+                        min: Math.round(minTemp),
+                        rain: rainProb,
+                        sunrise: '6:30 AM',
+                        sunset: '6:45 PM',
+                        uvIndex: 5.2
+                    });
+                    
+                    elements.weeklyForecast.appendChild(card);
                 }
             }
             
