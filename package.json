@@ -1,26 +1,32 @@
 {
   "name": "skycast-weather-pwa",
   "version": "1.0.0",
-  "description": "AI-powered Weather Forecast PWA with AdSense",
+  "private": true,
+  "description": "SkyCast – AI-powered Weather Forecast PWA",
   "type": "commonjs",
-  "main": "index.html",
+
   "scripts": {
-    "dev": "echo 'Development mode - open index.html in browser'",
-    "build": "echo 'Build complete' && exit 0",
-    "start": "echo 'Starting server...' && npx serve ."
+    "build": "echo \"Static site – no build step required\"",
+    "dev": "npx serve .",
+    "start": "npx serve ."
   },
+
   "keywords": [
     "weather",
-    "pwa",
     "ai",
     "forecast",
-    "adsense"
+    "pwa",
+    "weather-app",
+    "skycast"
   ],
-  "author": "SkyCast Team",
+
+  "author": "SkyCast",
   "license": "MIT",
+
   "engines": {
-    "node": ">=18.x"
+    "node": ">=18"
   },
+
   "dependencies": {},
   "devDependencies": {}
 }
